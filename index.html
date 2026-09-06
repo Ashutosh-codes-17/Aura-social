@@ -47,6 +47,263 @@
         }
         .aura-effect-active { animation: auraPulseGlow 3s infinite ease-in-out; }
 
+        .aura-neon { border-color: #a855f7 !important; box-shadow: 0 0 16px rgba(168, 85, 247, 0.55); }
+        .aura-cyber { border-color: #06b6d4 !important; box-shadow: 0 0 16px rgba(6, 182, 212, 0.55); }
+        .aura-solar { border-color: #f59e0b !important; box-shadow: 0 0 18px rgba(245, 158, 11, 0.6); }
+        .aura-plasma { border-color: #ec4899 !important; box-shadow: 0 0 18px rgba(236, 72, 153, 0.6); }
+        .aura-matrix { border-color: #10b981 !important; box-shadow: 0 0 18px rgba(16, 185, 129, 0.6); }
+
+        @keyframes pulseDot { 0%, 100% { opacity: 0.25; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
+        .typing-dot { animation: pulseDot 1.2s infinite ease-in-out both; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 14px); }
+        .aspect-square { aspect-ratio: 1 / 1; }
+        
+        .tier-bronze { color: #cd7f32; }
+        .tier-silver { color: #cbd5e1; }
+        .tier-gold { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.45); }
+        .tier-nova { background: linear-gradient(135deg, #c084fc, #2dd4bf); -webkit-background-clip: text; color: transparent; font-weight: 800; }
+    </style>
+</head>
+<body class="antialiased w-full h-[100dvh] relative bg-slate-950 flex flex-col overflow-hidden select-none">
+
+    <div id="boot-screen" class="absolute inset-0 z-[70] bg-slate-950 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+        <div class="w-20 h-20 bg-gradient-to-tr from-violet-600 via-purple-500 to-teal-400 rounded-3xl flex items-center justify-center shadow-xl shadow-violet-500/30 mb-6 animate-pulse">
+            <i class="fas fa-bolt text-4xl text-white"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-300 to-teal-300">AURA</h1>
+        <p class="text-slate-400 text-xs mt-2 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+            Syncing Supabase Cloud Mesh...
+        </p>
+    </div>
+
+    <div id="auth-screen" class="hidden absolute inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 overflow-y-auto">
+        <div class="w-16 h-16 bg-gradient-to-tr from-violet-600 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg mb-4">
+            <i class="fas fa-user-astronaut text-3xl text-white"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-1 text-white">Welcome to Aura</h2>
+        <p class="text-slate-400 text-xs text-center mb-5">Next-Gen Supabase Real-Time Social Experience</p>
+        
+        <div class="w-full max-w-sm bg-slate-900 p-1.5 rounded-2xl flex mb-4 border border-slate-800">
+            <button type="button" onclick="switchAuthMode('login')" id="auth-tab-login" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition bg-violet-600 text-white shadow">Log In</button>
+            <button type="button" onclick="switchAuthMode('signup')" id="auth-tab-signup" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white">Sign Up</button>
+        </div>
+
+        <div class="w-full max-w-sm space-y-3 pb-10" id="auth-form-container"></div>
+    </div>
+
+    <div id="app-layout" class="hidden flex-1 flex flex-col relative w-full h-full overflow-hidden">
+        <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-3 px-4 flex justify-between items-center shrink-0 z-20">
+            <div class="flex items-center gap-2.5">
+                <div id="app-logo-badge" class="w-9 h-9 bg-gradient-to-tr from-violet-600 to-teal-400 rounded-xl flex items-center justify-center font-black text-white shadow-md cursor-pointer transition hover:scale-105" onclick="switchTab('feed')">
+                    <i class="fas fa-bolt text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-300 to-teal-300 leading-tight">AURA</h1>
+                    <p id="cloud-status-indicator" class="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span> Supabase Cloud Connected
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="openLeaderboard()" class="bg-slate-800/90 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-full text-xs font-bold border border-slate-700/80 active:scale-95 flex items-center gap-1.5 shadow-sm transition" title="Leaderboard">
+                    <i class="fas fa-trophy"></i>
+                    <span id="header-points-badge" class="text-[11px] font-bold text-amber-300">0</span>
+                </button>
+                <button type="button" onclick="openNotifications()" class="bg-slate-800/90 hover:bg-slate-700 text-slate-300 w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border border-slate-700/80 active:scale-95 relative transition" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span id="notif-badge" class="hidden absolute top-1 right-1 bg-rose-500 w-2.5 h-2.5 rounded-full ring-2 ring-slate-900"></span>
+                </button>
+            </div>
+        </header>
+
+        <main id="main-view" class="flex-1 overflow-y-auto relative bg-slate-950 pb-24 px-0"></main>
+
+        <nav class="fixed bottom-0 left-0 right-0 h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800/80 flex justify-around items-center px-2 z-30 pb-safe shadow-2xl">
+            <button type="button" onclick="switchTab('feed')" id="bot-tab-feed" class="bot-nav-btn flex flex-col items-center justify-center w-full text-violet-400 transition py-1">
+                <i class="fas fa-home text-lg mb-0.5"></i><span class="text-[9px] font-bold">Feed</span>
+            </button>
+            <button type="button" onclick="switchTab('search')" id="bot-tab-search" class="bot-nav-btn flex flex-col items-center justify-center w-full text-slate-500 transition py-1">
+                <i class="fas fa-compass text-lg mb-0.5"></i><span class="text-[9px] font-bold">Explore</span>
+            </button>
+            <button type="button" onclick="switchTab('post')" class="flex flex-col items-center justify-center w-full transition active:scale-95 py-1">
+                <div class="bg-gradient-to-tr from-violet-600 via-fuchsia-600 to-teal-400 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg shadow-violet-500/30 -mt-5 border-4 border-slate-900">
+                    <i class="fas fa-plus text-lg font-bold"></i>
+                </div>
+            </button>
+            <button type="button" onclick="switchTab('dms')" id="bot-tab-dms" class="bot-nav-btn flex flex-col items-center justify-center w-full text-slate-500 transition relative py-1">
+                <i class="fas fa-comments text-lg mb-0.5"></i><span class="text-[9px] font-bold">Direct</span>
+                <span id="chat-badge" class="hidden absolute top-1 right-4 bg-rose-500 w-2.5 h-2.5 rounded-full border-2 border-slate-900"></span>
+            </button>
+            <button type="button" onclick="switchTab('profile')" id="bot-tab-profile" class="bot-nav-btn flex flex-col items-center justify-center w-full text-slate-500 transition py-1">
+                <i class="fas fa-user-circle text-lg mb-0.5"></i><span class="text-[9px] font-bold">Profile</span>
+            </button>
+        </nav>
+    </div>
+
+    <div id="chat-screen" class="hidden absolute inset-0 z-40 bg-slate-950 flex flex-col">
+        <header class="bg-slate-900 border-b border-slate-800 p-3 px-4 flex items-center gap-3 shrink-0">
+            <button type="button" onclick="closeChat()" class="text-slate-300 p-2 hover:text-white active:scale-90"><i class="fas fa-arrow-left text-lg"></i></button>
+            <div id="chat-header-avatar" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-white overflow-hidden shadow border border-slate-700"></div>
+            <div class="flex-1 min-w-0">
+                <h2 id="chat-header-name" class="font-bold text-white text-sm truncate">User</h2>
+                <p id="chat-header-status" class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
+                </p>
+            </div>
+        </header>
+
+        <div id="chat-messages-container" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 pb-36"></div>
+
+        <div id="chat-typing-indicator" class="hidden px-4 py-1.5 text-[10px] text-teal-300 font-bold flex items-center gap-2 bg-slate-900/90 border-t border-slate-800/80">
+            <span id="typing-name">User</span> is typing...
+            <span class="flex gap-1 items-center">
+                <span class="w-1.5 h-1.5 bg-teal-400 rounded-full typing-dot"></span>
+                <span class="w-1.5 h-1.5 bg-teal-400 rounded-full typing-dot"></span>
+                <span class="w-1.5 h-1.5 bg-teal-400 rounded-full typing-dot"></span>
+            </span>
+        </div>
+
+        <div class="absolute bottom-0 w-full bg-slate-900 border-t border-slate-800 pb-safe z-10">
+            <div class="px-3 pt-2 flex gap-2 overflow-x-auto hide-scrollbar text-base border-b border-slate-800/60 pb-2">
+                <button type="button" onclick="insertEmoji('chat-input-text', '❤️')" class="hover:scale-125 transition">❤️</button>
+                <button type="button" onclick="insertEmoji('chat-input-text', '🔥')" class="hover:scale-125 transition">🔥</button>
+                <button type="button" onclick="insertEmoji('chat-input-text', '⚡')" class="hover:scale-125 transition">⚡</button>
+                <button type="button" onclick="insertEmoji('chat-input-text', '😂')" class="hover:scale-125 transition">😂</button>
+                <button type="button" onclick="insertEmoji('chat-input-text', '✨')" class="hover:scale-125 transition">✨</button>
+                <button type="button" onclick="insertEmoji('chat-input-text', '🚀')" class="hover:scale-125 transition">🚀</button>
+                <button type="button" onclick="insertEmoji('chat-input-text', '👏')" class="hover:scale-125 transition">👏</button>
+            </div>
+            <div class="p-3 flex gap-2 items-center">
+                <label class="text-slate-400 hover:text-teal-400 p-2 cursor-pointer transition rounded-full hover:bg-slate-800" title="Attach Media">
+                    <i class="fas fa-image text-base"></i>
+                    <input type="file" id="chat-media-file" accept="image/*" class="hidden" onchange="sendDMImage(this)">
+                </label>
+                <input type="text" id="chat-input-text" placeholder="Send a message..." class="flex-1 bg-slate-800 text-white rounded-full px-4 py-2.5 outline-none text-sm focus:ring-2 focus:ring-violet-500 border border-slate-700" onkeydown="if(event.key==='Enter') { sendChatMessage(); } else { broadcastTyping(); }">
+                <button type="button" onclick="sendChatMessage()" class="w-10 h-10 bg-gradient-to-r from-violet-600 to-teal-500 rounded-full flex items-center justify-center text-white active:scale-90 shadow-md">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-container" class="hidden fixed inset-0 z-[55] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target === this) closeModal();">
+        <div id="modal-content" class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-5 max-h-[88vh] flex flex-col relative shadow-2xl">
+            <button type="button" onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold w-8 h-8 rounded-full bg-slate-800/90 flex items-center justify-center transition">✕</button>
+            <div id="modal-body" class="flex-1 overflow-y-auto space-y-4 pt-1 hide-scrollbar"></div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed top-16 left-4 right-4 z-[75] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        let supabaseClient = null;
+        try {
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(
+                    'https://ejktmkpqtlotnknorkwr.supabase.co',
+                    'Sb_publishable_ogh0JK5gpavMhkDqkwMbkw_mKdQ3REe'
+                );
+            }
+        } catch (e) {
+            console.warn('Supabase initialization warning:', e);
+        }
+
+        let me = null;
+        let activeTab = 'feed';
+        let activeChatUserId = null;
+        let authMode = 'login';
+        let exploreFilter = 'all'; 
+        let botPostTimer = null;
+        let typingTimeout = null;
+
+        const AURA_EFFECT_OPTIONS = [
+            { id: 'none', label: 'Classic Slate', borderClass: '', bannerGrad: 'from-slate-800 to-slate-900', glowColor: 'rgba(148, 163, 184, 0.2)' },
+            { id: 'neon', label: 'Neon Violet', borderClass: 'aura-neon', bannerGrad: 'from-violet-900/60 via-purple-800/50 to-slate-900', glowColor: 'rgba(168, 85, 247, 0.45)' },
+            { id: 'cyber', label: 'Cyber Teal', borderClass: 'aura-cyber', bannerGrad: 'from-teal-900/60 via-cyan-800/50 to-slate-900', glowColor: 'rgba(6, 182, 212, 0.45)' },
+            { id: 'solar', label: 'Solar Flare', borderClass: 'aura-solar', bannerGrad: 'from-amber-900/60 via-orange-800/50 to-slate-900', glowColor: 'rgba(245, 158, 11, 0.45)' },
+            { id: 'plasma', label: 'Plasma Pink', borderClass: 'aura-plasma', bannerGrad: 'from-pink-900/60 via-rose-800/50 to-slate-900', glowColor: 'rgba(236, 72, 153, 0.45)' },
+            { id: 'matrix', label: 'Matrix Emerald', borderClass: 'aura-matrix', bannerGrad: 'from-emerald-900/60 via-teal-800/50 to-slate-900', glowColor: 'rgba(16, 185, 129, 0.45)' }
+        ];
+
+        const state = {
+            users: {},
+            posts: [],
+            stories: [],
+            messages: [],
+            notifications: [],
+            friends: ['usr_maya_creative', 'usr_dev_kavya']
+        };
+
+        const BOTS = [
+            { id: 'bot_nova', username: 'nova_ai', name: 'Nova Bot', bio: 'Futuristic AI & Quantum Explorer 🚀', gender: 'AI Companion', age: 25, avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200', is_bot: true, points: 1850, aura_effect: 'neon', status_mood: '⚡ Syncing Neural Mesh' },
+            { id: 'bot_zen', username: 'zen_poems', name: 'Zen Poet', bio: 'Writing digital verse and contemplative calm 🍃', gender: 'AI Companion', age: 24, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200', is_bot: true, points: 920, aura_effect: 'matrix', status_mood: '🍃 Breathing in the code' }
+        ];
+
+        const COMMUNITY_USERS = [
+            { id: 'usr_maya_creative', username: 'maya_art', name: 'Maya Sharma', bio: 'Visual designer & 3D Web Enthusiast 🎨', gender: 'Female', age: 22, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200', is_bot: false, points: 540, aura_effect: 'plasma', status_mood: '🎨 Crafting aesthetics', friends: [] },
+            { id: 'usr_dev_kavya', username: 'kavya_codes', name: 'Kavya Rao', bio: 'Building open-source apps & espresso worshipper ☕', gender: 'Female', age: 24, avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200', is_bot: false, points: 380, aura_effect: 'cyber', status_mood: '☕ Compiling ideas', friends: [] }
+        ];
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function formatPostContent(text) {
+            if (!text) return '';
+            const safe = escapeHtml(text);
+            return safe.replace(/(#[a-zA-Z0-9_-]+)/gi, '<span class="text-violet-400 font-bold cursor-pointer hover:underline" onclick="searchTag(\'$1\')">$1</span>');
+        }
+
+        function timeAgo(timestamp) {
+            if (!timestamp) return 'Just now';
+            const secs = Math.floor((Date.now() - timestamp) / 1000);
+            if (secs < 60) return 'Just now';
+            if (secs < 3600) return Math.floor(secs / 60) + 'm ago';
+            if (secs < 86400) return Math.floor(secs / 3600) + 'h ago';
+            return Math.floor(secs / 86400) + 'd ago';
+        }
+
+        function getTierClass(points) {
+            if (points >= 1000) return 'tier-nova';
+            if (points >= 300) return 'tier-gold';
+            if (points >= 100) return 'tier-silver';
+            return 'tier-bronze';
+        }
+
+        function getTierName(points) {
+            if (points >= 1000) return 'Nova';
+            if (points >= 300) return 'Gold';
+            if (points >= 100) return 'Silver';
+            return 'Bronze';
+        }
+
+        function getAuraPreset(id) {
+            return AURA_EFFECT_OPTIONS.find(o => o.id === id) || AURA_EFFECT_OPTIONS[0];
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const t = document.createElement('div');
+            const bg = type === 'error' ? 'bg-red-500' : (type === 'success' ? 'bg-teal-500' : 'bg-violet-600');
+            t.className = `${bg} text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-bold toast-anim flex items-center justify-between pointer-events-auto border borde            0% { transform: scale(1); } 
+            40% { transform: scale(1.4); } 
+            100% { transform: scale(1); } 
+        }
+        .heart-active { animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); color: #ef4444 !important; }
+        .bookmark-active { color: #38bdf8 !important; }
+
+        @keyframes auraPulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), 0 0 30px rgba(20, 184, 166, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.7), 0 0 45px rgba(20, 184, 166, 0.4); }
+        }
+        .aura-effect-active { animation: auraPulseGlow 3s infinite ease-in-out; }
+
         /* Aura Effect Border Presets */
         .aura-neon { border-color: #a855f7 !important; box-shadow: 0 0 16px rgba(168, 85, 247, 0.55); }
         .aura-cyber { border-color: #06b6d4 !important; box-shadow: 0 0 16px rgba(6, 182, 212, 0.55); }
