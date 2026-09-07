@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0f">
+  <meta name="description" content="Aura Social - Connect, share, discover and chat with Aura AI.">
+  <title>Aura Social</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #09090b;
+      color: #f4f4f5;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .glass {
+      background: rgba(24, 24, 27, 0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .border-soft {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #a78bfa, #ec4899, #38bdf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #7c3aed, #db2777, #0284c7);
+    }
+
+    .page {
+      min-height: 100dvh;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+
+    .desktop-sidebar {
+      display: none;
+    }
+
+    .mobile-nav {
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(9, 9, 11, 0.94);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mobile-nav button {
+      min-height: 54px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #27272a;
+    }
+
+    .post-image {
+      width: 100%;
+      max-height: 560px;
+      object-fit: cover;
+      border-radius: 14px;
+    }
+
+    .short-video {
+      width: 100%;
+      height: calc(100dvh - 136px);
+      object-fit: cover;
+      background: #000;
+      border-radius: 16px;
+    }
+
+    .chat-scroll {
+      overscroll-behavior: contain;
+    }
+
+    .message-bubble {
+      max-width: 82%;
+      word-break: break-word;
+    }
+
+    .message-user {
+      background: linear-gradient(135deg, #7c3aed, #db2777);
+    }
+
+    .message-ai {
+      background: #27272a;
+    }
+
+    .loader {
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 1; }
+    }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 620px;
+      max-height: 92dvh;
+      overflow-y: auto;
+      background: #18181b;
+      border-radius: 24px 24px 0 0;
+      padding: 20px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 500;
+      left: 50%;
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: #27272a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      white-space: nowrap;
+      max-width: 90vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .no-scrollbar {
+      scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .mobile-nav { display: none; }
+      .desktop-sidebar {
+        display: flex;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 250px;
+        padding: 24px 14px;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        background: #09090b;
+        z-index: 90;
+      }
+      .page {
+        margin-left: 250px;
+        padding-bottom: 0;
+      }
+      .main-container {
+        max-width: 900px;
+        margin: auto;
+      }
+      .modal-bg {
+        align-items: center;
+      }
+      .modal {
+        border-radius: 24px;
+        max-height: 85dvh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="bootScreen" class="fixed inset-0 z-[1000] bg-black flex items-center justify-center">
+  <div class="text-center">
+    <div class="w-16 h-16 rounded-2xl gradient-bg mx-auto flex items-center justify-center text-3xl font-black">A</div>
+    <div class="mt-4 text-2xl font-bold gradient-text">Aura Social</div>
+    <div class="mt-4 flex justify-center"><div class="loader"></div></div>
+    <p id="bootStatusText" class="text-zinc-500 text-sm mt-3">Loading your Aura...</p>
+    <button id="bootBypassButton" class="hidden mt-4 text-xs text-purple-400 underline" onclick="showAuth()">Taking too long? Tap here</button>
+  </div>
+</div>
+
+<div id="authScreen" class="hidden min-h-dvh bg-black px-5 py-10 flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 rounded-3xl gradient-bg mx-auto flex items-center justify-center text-4xl font-black shadow-2xl">A</div>
+      <h1 class="text-4xl font-black mt-5 gradient-text">Aura Social</h1>
+      <p class="text-zinc-400 mt-2">Connect. Share. Discover.</p>
+    </div>
+
+    <div class="glass border-soft rounded-3xl p-5">
+      <div class="flex gap-2 p-1 bg-zinc-900 rounded-xl mb-5">
+        <button id="loginTab" class="flex-1 py-2.5 rounded-lg bg-zinc-700 font-semibold">Login</button>
+        <button id="signupTab" class="flex-1 py-2.5 rounded-lg text-zinc-400">Sign up</button>
+      </div>
+
+      <form id="authForm">
+        <div id="nameField" class="hidden mb-4">
+          <label class="text-sm text-zinc-400">Username</label>
+          <input id="usernameInput" type="text" maxlength="30" placeholder="Choose a username" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500">
+        </div>
+
+        <div class="mb-4">
+          <label class="text-sm text-zinc-400">Email</label>
+          <input id="emailInput" type="email" required placeholder="you@example.com" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500">
+        </div>
+
+        <div class="mb-5">
+          <label class="text-sm text-zinc-400">Password</label>
+          <input id="passwordInput" type="password" required minlength="6" placeholder="••••••••" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500">
+        </div>
+
+        <button id="authButton" class="w-full gradient-bg rounded-xl py-3.5 font-bold active:scale-[0.98] transition">Login</button>
+        <p id="authMessage" class="text-center text-sm mt-4 text-zinc-400"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <aside class="desktop-sidebar">
+    <div class="w-full flex flex-col">
+      <div class="px-4 mb-8">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl gradient-bg flex items-center justify-center font-black text-xl">A</div>
+          <div class="text-2xl font-black gradient-text">Aura</div>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <button data-page="home" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🏠 <span>Home</span></button>
+        <button data-page="shorts" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">▶️ <span>Shorts</span></button>
+        <button data-page="search" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🔍 <span>Search</span></button>
+        <button data-page="messages" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">💬 <span>Messages</span></button>
+        <button data-page="notifications" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🔔 <span>Notifications</span></button>
+        <button data-page="leaderboard" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🏆 <span>Leaderboard</span></button>
+        <button data-page="profile" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">👤 <span>Profile</span></button>
+      </nav>
+
+      <div class="mt-auto">
+        <button id="logoutButtonDesktop" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left text-red-400">🚪 Logout</button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="sticky top-0 z-50 glass border-b border-white/5">
+    <div class="main-container px-4 h-16 flex items-center justify-between">
+      <button id="mobileLogo" class="font-black text-2xl gradient-text">Aura</button>
+      <div class="hidden md:block text-lg font-bold" id="desktopPageTitle">Home</div>
+      <div class="flex items-center gap-2">
+        <button data-page="search" class="p-2.5 rounded-full hover:bg-zinc-800" aria-label="Search">🔍</button>
+        <button data-page="notifications" class="relative p-2.5 rounded-full hover:bg-zinc-800" aria-label="Notifications">
+          🔔
+          <span id="notificationDot" class="hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section id="page-home" class="app-page">
+      <div class="main-container px-4 py-4">
+        <div class="glass border-soft rounded-2xl p-4 mb-5">
+          <div class="flex gap-3">
+            <img id="composerAvatar" class="avatar" src="" alt="avatar">
+            <button id="openPostComposer" class="flex-1 text-left bg-zinc-900 rounded-full px-4 text-zinc-500">
+              What's on your mind?
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mt-3">
+            <button id="quickImagePost" class="py-2 rounded-xl hover:bg-zinc-900 text-sm">📷 Photo</button>
+            <button id="quickShortPost" class="py-2 rounded-xl hover:bg-zinc-900 text-sm">🎬 Short</button>
+            <button id="quickFeelingPost" class="py-2 rounded-xl hover:bg-zinc-900 text-sm">✨ Feeling</button>
+          </div>
+        </div>
+
+        <div id="feedContainer" class="space-y-4">
+          <div class="text-center py-16">
+            <div class="loader mx-auto"></div>
+            <p class="text-zinc-500 mt-4">Loading posts...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-shorts" class="app-page hidden">
+      <div class="main-container px-3 py-3">
+        <div class="flex justify-between items-center mb-3">
+          <div>
+            <h2 class="text-xl font-bold">Aura Shorts</h2>
+            <p class="text-xs text-zinc-500">Discover what's trending</p>
+          </div>
+          <button id="createShortButton" class="gradient-bg px-4 py-2 rounded-full text-sm font-bold">+ Create</button>
+        </div>
+        <div id="shortsContainer" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <section id="page-search" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <h2 class="text-2xl font-bold mb-4">Discover people</h2>
+        <div class="relative">
+          <input id="userSearchInput" type="search" placeholder="Search usernames..." class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3.5 outline-none focus:border-purple-500">
+        </div>
+        <div id="searchResults" class="mt-5 space-y-3"></div>
+      </div>
+    </section>
+
+    <section id="page-messages" class="app-page hidden">
+      <div class="main-container">
+        <div id="conversationListView">
+          <div class="px-4 py-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold">Messages</h2>
+              <p class="text-sm text-zinc-500">Chat with people or Aura AI</p>
+            </div>
+            <button id="newMessageButton" class="gradient-bg rounded-full px-4 py-2 text-sm font-bold">+</button>
+          </div>
+
+          <button id="openAuraChat" class="w-full px-4 py-3 flex items-center gap-3 hover:bg-zinc-900 border-y border-white/5">
+            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center font-black">A</div>
+            <div class="flex-1 text-left">
+              <div class="font-bold">Aura AI</div>
+              <div class="text-sm text-zinc-500">Your AI companion</div>
+            </div>
+            <div class="text-zinc-500">›</div>
+          </button>
+
+          <div id="conversationList"></div>
+        </div>
+
+        <div id="chatView" class="hidden flex flex-col h-[calc(100dvh-64px)]">
+          <div class="h-16 border-b border-white/5 flex items-center gap-3 px-4">
+            <button id="closeChat" class="text-2xl px-2">‹</button>
+            <img id="chatAvatar" class="avatar" src="" alt="">
+            <div class="flex-1">
+              <div id="chatName" class="font-bold">Chat</div>
+              <div id="chatStatus" class="text-xs text-zinc-500">Online</div>
+            </div>
+          </div>
+
+          <div id="chatMessages" class="chat-scroll flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+          <div class="border-t border-white/5 p-3 bg-zinc-950">
+            <div class="flex gap-2 items-end">
+              <input id="chatFileInput" type="file" class="hidden">
+              <button id="attachFileButton" class="w-11 h-11 rounded-full bg-zinc-800 flex items-center justify-center">📎</button>
+              <textarea id="chatInput" rows="1" placeholder="Message..." class="flex-1 max-h-32 bg-zinc-900 rounded-2xl px-4 py-3 outline-none resize-none"></textarea>
+              <button id="sendChatButton" class="w-11 h-11 rounded-full gradient-bg flex items-center justify-center font-bold">↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-notifications" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <h2 class="text-2xl font-bold mb-5">Notifications</h2>
+        <div id="notificationsContainer" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <section id="page-leaderboard" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <div class="text-center mb-6">
+          <div class="text-4xl">🏆</div>
+          <h2 class="text-3xl font-black mt-2">Weekly Aura</h2>
+          <p class="text-zinc-500">Earn points by being active</p>
+        </div>
+        <div id="myRankCard" class="glass border-soft rounded-2xl p-4 mb-5"></div>
+        <div id="leaderboardContainer" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <section id="page-profile" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <div class="text-center">
+          <img id="profileAvatar" class="w-24 h-24 rounded-full mx-auto object-cover bg-zinc-800" src="" alt="">
+          <h2 id="profileUsername" class="text-2xl font-black mt-3"></h2>
+          <p id="profileBio" class="text-zinc-400 mt-1"></p>
+          <button id="editProfileButton" class="mt-4 px-5 py-2 rounded-full bg-zinc-800 font-semibold">Edit profile</button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-7">
+          <div class="glass border-soft rounded-2xl p-4 text-center">
+            <div id="profilePosts" class="text-xl font-bold">0</div>
+            <div class="text-xs text-zinc-500 mt-1">Posts</div>
+          </div>
+          <div class="glass border-soft rounded-2xl p-4 text-center">
+            <div id="profileFollowers" class="text-xl font-bold">0</div>
+            <div class="text-xs text-zinc-500 mt-1">Followers</div>
+          </div>
+          <div class="glass border-soft rounded-2xl p-4 text-center">
+            <div id="profileFollowing" class="text-xl font-bold">0</div>
+            <div class="text-xs text-zinc-500 mt-1">Following</div>
+          </div>
+        </div>
+
+        <div class="glass border-soft rounded-2xl p-5 mt-4">
+          <div class="flex justify-between">
+            <div>
+              <div class="text-zinc-500 text-sm">Weekly Aura Points</div>
+              <div id="profileWeeklyPoints" class="text-3xl font-black mt-1">0</div>
+            </div>
+            <div class="text-right">
+              <div class="text-zinc-500 text-sm">Streak</div>
+              <div id="profileStreak" class="text-3xl font-black mt-1">🔥 0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="font-bold mb-3">Badges</h3>
+          <div id="profileBadges" class="grid grid-cols-2 gap-3"></div>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="font-bold mb-3">Your posts</h3>
+          <div id="profilePostsGrid" class="grid grid-cols-3 gap-1"></div>
+        </div>
+
+        <button id="logoutButton" class="w-full mt-8 py-3 rounded-xl bg-red-500/10 text-red-400 font-semibold">Logout</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="mobile-nav">
+    <div class="max-w-xl mx-auto grid grid-cols-5">
+      <button data-page="home" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">⌂</span><span class="text-[10px]">Home</span>
+      </button>
+      <button data-page="shorts" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">▶</span><span class="text-[10px]">Shorts</span>
+      </button>
+      <button id="mobileCreateButton" class="flex flex-col items-center justify-center">
+        <span class="w-11 h-11 rounded-2xl gradient-bg flex items-center justify-center text-2xl font-light">+</span>
+      </button>
+      <button data-page="messages" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">♡</span><span class="text-[10px]">Messages</span>
+      </button>
+      <button data-page="profile" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">●</span><span class="text-[10px]">Profile</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<div id="postModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-xl font-bold">Create post</h2>
+      <button id="closePostModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <textarea id="postContent" rows="5" maxlength="5000" placeholder="Share something with Aura..." class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 outline-none resize-none focus:border-purple-500"></textarea>
+    <div id="postImagePreview" class="hidden mt-3"></div>
+    <div class="grid grid-cols-2 gap-2 mt-4">
+      <button id="selectPostImage" class="py-3 rounded-xl bg-zinc-900">📷 Add photo</button>
+      <button id="toggleShortMode" class="py-3 rounded-xl bg-zinc-900">🎬 Make Short</button>
+    </div>
+    <input id="postImageInput" type="file" accept="image/*,video/*" class="hidden">
+    <button id="publishPostButton" class="w-full mt-4 py-3.5 rounded-xl gradient-bg font-bold">Post</button>
+  </div>
+</div>
+
+<div id="use
