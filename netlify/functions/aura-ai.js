@@ -25,9 +25,10 @@ exports.handler = async function (event, context) {
 
   try {
     const { prompt, history } = JSON.parse(event.body || "{}");
-    
-    // Accepts either GROQ_API_KEY or DEEPSEEK_API_KEY from Netlify environment variables
-    const apiKey = process.env.GROQ_API_KEY || process.env.DEEPSEEK_API_KEY;
+
+    // Accepts GROQ_API_KEY or fallback DEEPSEEK_API_KEY from Netlify environment variables
+    const rawKey = process.env.GROQ_API_KEY || process.env.DEEPSEEK_API_KEY;
+    const apiKey = rawKey ? rawKey.trim() : null;
 
     if (!apiKey) {
       return {
@@ -65,33 +66,52 @@ exports.handler = async function (event, context) {
       content: prompt || "Hello!",
     });
 
-    // 3. Send request to Groq API using the guaranteed active free-tier model
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages,
-        temperature: 0.7,
-        max_tokens: 800,
-      }),
-    });
+    // 3. List of active Groq models in priority order
+    const candidateModels = [
+      "llama-3.1-8b-instant",
+      "llama-3.3-70b-versatile",
+      "openai/gpt-oss-20b"
+    ];
 
-    const data = await response.json();
+    let reply = null;
+    let lastErrorMsg = "";
 
-    if (!response.ok) {
-      const errorMsg = data?.error?.message || "Error communicating with Groq.";
+    for (const modelId of candidateModels) {
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: modelId,
+            messages,
+            temperature: 0.7,
+            max_tokens: 800,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data?.choices?.[0]?.message?.content) {
+          reply = data.choices[0].message.content;
+          break; // Successfully got a response!
+        } else {
+          lastErrorMsg = data?.error?.message || `Status ${response.status}`;
+        }
+      } catch (err) {
+        lastErrorMsg = err.message;
+      }
+    }
+
+    if (!reply) {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ reply: `Groq Error: ${errorMsg}` }),
+        body: JSON.stringify({ reply: `Groq Error: ${lastErrorMsg}` }),
       };
     }
-
-    const reply = data.choices?.[0]?.message?.content || "I am thinking...";
 
     return {
       statusCode: 200,
