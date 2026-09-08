@@ -1,0 +1,3436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0f">
+  <meta name="description" content="Aura Social - Connect, share, discover and chat with friends.">
+  <title>Aura Social</title>
+
+  <!-- Tailwind CSS & Supabase JS loaded directly -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #09090b;
+      color: #f4f4f5;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .glass {
+      background: rgba(24, 24, 27, 0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .border-soft {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #a78bfa, #ec4899, #38bdf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #7c3aed, #db2777, #0284c7);
+    }
+
+    .gradient-ring {
+      background: linear-gradient(45deg, #f43f5e, #ec4899, #8b5cf6, #06b6d4);
+    }
+
+    .page {
+      min-height: 100dvh;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+
+    .desktop-sidebar {
+      display: none;
+    }
+
+    .mobile-nav {
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(9, 9, 11, 0.94);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mobile-nav button {
+      min-height: 54px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #27272a;
+    }
+
+    .post-image {
+      width: 100%;
+      max-height: 560px;
+      object-fit: cover;
+      border-radius: 14px;
+    }
+
+    .short-video {
+      width: 100%;
+      height: calc(100dvh - 136px);
+      object-fit: cover;
+      background: #000;
+      border-radius: 16px;
+    }
+
+    .chat-scroll {
+      overscroll-behavior: contain;
+    }
+
+    .message-bubble {
+      max-width: 82%;
+      word-break: break-word;
+    }
+
+    .message-user {
+      background: linear-gradient(135deg, #7c3aed, #db2777);
+    }
+
+    .message-ai {
+      background: #27272a;
+    }
+
+    .message-bot {
+      background: #1e1b4b;
+      border: 1px solid #4338ca;
+    }
+
+    .loader {
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loader-sm {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 1; }
+    }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 620px;
+      max-height: 92dvh;
+      overflow-y: auto;
+      background: #18181b;
+      border-radius: 24px 24px 0 0;
+      padding: 20px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 500;
+      left: 50%;
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: #27272a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      white-space: nowrap;
+      max-width: 90vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .no-scrollbar {
+      scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .heart-pop {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 80px;
+      color: #ec4899;
+      pointer-events: none;
+      z-index: 30;
+      animation: popHeart 0.75s ease-out forwards;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+    }
+
+    @keyframes popHeart {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+      40% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+      70% { transform: translate(-50%, -50%) scale(1.0); opacity: 0.9; }
+      100% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
+    }
+
+    #chatView {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: #09090b;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+    }
+
+    .chat-bottom-bar {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(14, 14, 17, 0.96);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #storyViewerModal {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .story-progress-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 99px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .story-progress-fill {
+      height: 100%;
+      background: #fff;
+      width: 0%;
+    }
+
+    @media (min-width: 768px) {
+      .mobile-nav { display: none; }
+      .desktop-sidebar {
+        display: flex;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 250px;
+        padding: 24px 14px;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        background: #09090b;
+        z-index: 90;
+      }
+      .page {
+        margin-left: 250px;
+        padding-bottom: 0;
+      }
+      .main-container {
+        max-width: 900px;
+        margin: auto;
+      }
+      #chatView {
+        left: 250px;
+      }
+      .modal-bg {
+        align-items: center;
+      }
+      .modal {
+        border-radius: 24px;
+        max-height: 85dvh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Bootloader Screen -->
+<div id="bootScreen" class="fixed inset-0 z-[1000] bg-black flex items-center justify-center">
+  <div class="text-center">
+    <div class="w-16 h-16 rounded-2xl gradient-bg mx-auto flex items-center justify-center text-3xl font-black">A</div>
+    <div class="mt-4 text-2xl font-bold gradient-text">Aura Social</div>
+    <div class="text-xs text-zinc-400 mt-1">Created with ❤️ by <span class="text-purple-400 font-semibold">Ashutosh Pandey</span></div>
+    <div class="mt-5 flex justify-center"><div class="loader"></div></div>
+    <p id="bootStatusText" class="text-zinc-500 text-sm mt-3">Loading your Aura...</p>
+    <button id="bootBypassButton" class="hidden mt-4 text-xs text-purple-400 underline" onclick="showAuth()">Taking too long? Tap here</button>
+  </div>
+</div>
+
+<!-- Auth Screen -->
+<div id="authScreen" class="hidden min-h-dvh bg-black px-5 py-10 flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 rounded-3xl gradient-bg mx-auto flex items-center justify-center text-4xl font-black shadow-2xl">A</div>
+      <h1 class="text-4xl font-black mt-5 gradient-text">Aura Social</h1>
+      <p class="text-xs text-zinc-400 mt-1">Created with ❤️ by <span class="text-purple-400 font-semibold">Ashutosh Pandey</span></p>
+      <p class="text-zinc-400 mt-2 text-sm">Connect. Share. Discover.</p>
+    </div>
+
+    <div class="glass border-soft rounded-3xl p-5">
+      <div class="flex gap-2 p-1 bg-zinc-900 rounded-xl mb-5">
+        <button id="loginTab" class="flex-1 py-2.5 rounded-lg bg-zinc-700 font-semibold">Login</button>
+        <button id="signupTab" class="flex-1 py-2.5 rounded-lg text-zinc-400">Sign up</button>
+      </div>
+
+      <form id="authForm">
+        <div id="nameField" class="hidden mb-4">
+          <label class="text-sm text-zinc-400">Username</label>
+          <input id="usernameInput" type="text" maxlength="30" placeholder="Choose a username" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500">
+        </div>
+
+        <div class="mb-4">
+          <label class="text-sm text-zinc-400">Email</label>
+          <input id="emailInput" type="email" required placeholder="you@example.com" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500">
+        </div>
+
+        <div class="mb-5">
+          <label class="text-sm text-zinc-400">Password</label>
+          <input id="passwordInput" type="password" required minlength="6" placeholder="••••••••" class="mt-2 w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500">
+        </div>
+
+        <button id="authButton" class="w-full gradient-bg rounded-xl py-3.5 font-bold active:scale-[0.98] transition">Login</button>
+        <p id="authMessage" class="text-center text-sm mt-4 text-zinc-400"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Main Application -->
+<div id="app" class="hidden">
+  <aside class="desktop-sidebar">
+    <div class="w-full flex flex-col">
+      <div class="px-4 mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl gradient-bg flex items-center justify-center font-black text-xl">A</div>
+          <div>
+            <div class="text-2xl font-black gradient-text">Aura</div>
+            <div class="text-[11px] text-zinc-400 font-medium leading-tight">by <span class="text-purple-400">Ashutosh Pandey</span></div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <button data-page="home" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🏠 <span>Home</span></button>
+        <button data-page="shorts" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">▶️ <span>Shorts</span></button>
+        <button data-page="search" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🔍 <span>Search</span></button>
+        <button data-page="messages" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">💬 <span>Messages</span></button>
+        <button data-page="notifications" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🔔 <span>Notifications</span></button>
+        <button data-page="leaderboard" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">🏆 <span>Leaderboard</span></button>
+        <button data-page="profile" class="desktop-nav w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left">👤 <span>Profile</span></button>
+      </nav>
+
+      <div class="mt-auto pt-4 border-t border-white/5 space-y-2">
+        <a href="https://www.instagram.com/lucfr.21?stkn=bXBmcHQ4cWVmZ3p4" target="_blank" rel="noopener noreferrer" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl bg-purple-950/40 text-purple-300 hover:bg-purple-900/40 transition text-xs font-semibold">
+          📸 <span>Follow Creator @lucfr.21</span>
+        </a>
+        <button id="logoutButtonDesktop" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-zinc-900 text-left text-red-400 text-sm">🚪 Logout</button>
+      </div>
+    </div>
+  </aside>
+
+  <header class="sticky top-0 z-50 glass border-b border-white/5">
+    <div class="main-container px-4 h-16 flex items-center justify-between">
+      <div>
+        <button id="mobileLogo" class="font-black text-2xl gradient-text block leading-none">Aura</button>
+        <span class="text-[10px] text-zinc-400 block md:hidden">by Ashutosh Pandey</span>
+      </div>
+      <div class="hidden md:block text-lg font-bold" id="desktopPageTitle">Home</div>
+      <div class="flex items-center gap-2">
+        <button data-page="search" class="p-2.5 rounded-full hover:bg-zinc-800" aria-label="Search">🔍</button>
+        <button data-page="notifications" class="relative p-2.5 rounded-full hover:bg-zinc-800" aria-label="Notifications">
+          🔔
+          <span id="notificationDot" class="hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- HOME TAB -->
+    <section id="page-home" class="app-page">
+      <div class="main-container px-4 py-3">
+
+        <!-- 24-HOUR STORIES TRAY -->
+        <div class="glass border-soft rounded-2xl p-3 mb-4 overflow-x-auto no-scrollbar">
+          <div id="storiesTray" class="flex items-center gap-3">
+            <div class="flex flex-col items-center gap-1 shrink-0 cursor-pointer" onclick="openStoryUploader()">
+              <div class="relative w-16 h-16 rounded-full p-0.5 border-2 border-dashed border-purple-400 flex items-center justify-center">
+                <img id="myStoryTrayAvatar" src="" class="w-14 h-14 rounded-full object-cover">
+                <div class="absolute bottom-0 right-0 w-5 h-5 rounded-full gradient-bg flex items-center justify-center text-xs font-black text-white border border-black">+</div>
+              </div>
+              <span class="text-[11px] text-zinc-300 font-medium">Your Story</span>
+            </div>
+            <div id="storiesList" class="flex items-center gap-3"></div>
+          </div>
+        </div>
+
+        <div class="glass border-soft rounded-2xl p-3.5 mb-4 flex items-center justify-between bg-gradient-to-r from-purple-900/30 to-pink-900/30">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center font-black text-lg">A</div>
+            <div>
+              <div class="text-sm font-bold flex items-center gap-1.5">Aura Official <span class="text-blue-400 text-xs">✓</span></div>
+              <div class="text-[11px] text-zinc-400">Created by Ashutosh Pandey</div>
+            </div>
+          </div>
+          <a href="https://www.instagram.com/lucfr.21?stkn=bXBmcHQ4cWVmZ3p4" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 rounded-full gradient-bg text-xs font-bold shadow hover:opacity-90 transition">
+            Instagram ↗
+          </a>
+        </div>
+
+        <div class="glass border-soft rounded-2xl p-4 mb-5">
+          <div class="flex gap-3">
+            <img id="composerAvatar" class="avatar" src="" alt="avatar">
+            <button id="openPostComposer" class="flex-1 text-left bg-zinc-900 rounded-full px-4 text-zinc-500 text-sm">
+              What's on your mind?
+            </button>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mt-3">
+            <button id="quickImagePost" class="py-2 rounded-xl hover:bg-zinc-900 text-sm font-medium">📷 Photo</button>
+            <button id="quickShortPost" class="py-2 rounded-xl hover:bg-zinc-900 text-sm font-medium">🎬 Short</button>
+            <button id="quickFeelingPost" class="py-2 rounded-xl hover:bg-zinc-900 text-sm font-medium">✨ Feeling</button>
+          </div>
+        </div>
+
+        <!-- Feed Container -->
+        <div id="feedContainer" class="space-y-4">
+          <div class="text-center py-16">
+            <div class="loader mx-auto"></div>
+            <p class="text-zinc-500 mt-4">Loading posts...</p>
+          </div>
+        </div>
+
+        <!-- Infinite Scroll Sentinel -->
+        <div id="feedSentinel" class="py-6 flex items-center justify-center text-xs text-zinc-500 hidden">
+          <div class="flex items-center gap-2">
+            <div class="loader-sm"></div>
+            <span>Loading more posts...</span>
+          </div>
+        </div>
+        <div id="feedEndMessage" class="py-8 text-center text-xs text-zinc-600 hidden">
+          You've caught up with all posts ✨
+        </div>
+      </div>
+    </section>
+
+    <!-- SHORTS TAB -->
+    <section id="page-shorts" class="app-page hidden">
+      <div class="main-container px-3 py-3">
+        <div class="flex justify-between items-center mb-3">
+          <div>
+            <h2 class="text-xl font-bold">Aura Shorts</h2>
+            <p class="text-xs text-zinc-500">Double tap to like · Tap comments to discuss</p>
+          </div>
+          <button id="createShortButton" class="gradient-bg px-4 py-2 rounded-full text-sm font-bold">+ Create</button>
+        </div>
+
+        <div id="shortsContainer" class="space-y-4"></div>
+
+        <div id="shortsSentinel" class="py-8 flex items-center justify-center text-xs text-zinc-500 hidden">
+          <div class="flex items-center gap-2">
+            <div class="loader-sm"></div>
+            <span>Loading more shorts...</span>
+          </div>
+        </div>
+        <div id="shortsEndMessage" class="py-8 text-center text-xs text-zinc-600 hidden">
+          No more shorts to display 🎬
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH TAB -->
+    <section id="page-search" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <h2 class="text-2xl font-bold mb-3">Discover people</h2>
+        
+        <div class="glass border-soft rounded-2xl p-4 mb-4 border-purple-500/40 bg-purple-950/20 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center font-black text-xl">A</div>
+            <div>
+              <div class="font-black text-sm flex items-center gap-1.5">Ashutosh Pandey <span class="text-blue-400 text-xs">✓</span></div>
+              <div class="text-xs text-purple-300">Creator & Lead Architect of Aura</div>
+              <div class="text-[11px] text-zinc-400 mt-0.5">IG: @lucfr.21</div>
+            </div>
+          </div>
+          <a href="https://www.instagram.com/lucfr.21?stkn=bXBmcHQ4cWVmZ3p4" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-full gradient-bg text-xs font-bold">
+            Connect
+          </a>
+        </div>
+
+        <div class="relative">
+          <input id="userSearchInput" type="search" placeholder="Search usernames..." class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3.5 outline-none focus:border-purple-500 text-sm">
+        </div>
+        <div id="searchResults" class="mt-5 space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- MESSAGES TAB -->
+    <section id="page-messages" class="app-page hidden">
+      <div class="main-container">
+        <div id="conversationListView">
+          <div class="px-4 py-5 flex items-center justify-between">
+            <div>
+              <h2 class="text-2xl font-bold">Messages</h2>
+              <p class="text-sm text-zinc-500">Chat with friends & Aura AI</p>
+            </div>
+            <button id="newMessageButton" class="gradient-bg rounded-full px-4 py-2 text-sm font-bold">+</button>
+          </div>
+
+          <!-- Active Aura AI Chat trigger -->
+          <button id="openAuraChat" class="w-full px-4 py-3.5 flex items-center gap-3 hover:bg-zinc-900 border-y border-white/5 transition">
+            <div class="w-12 h-12 rounded-full gradient-bg flex items-center justify-center font-black text-xl shadow-lg">✨</div>
+            <div class="flex-1 text-left">
+              <div class="font-bold flex items-center gap-2">
+                Aura AI
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">ONLINE COMPANION</span>
+              </div>
+              <div class="text-xs text-zinc-400">Ask questions, brainstorm ideas or chat!</div>
+            </div>
+            <div class="text-zinc-500">›</div>
+          </button>
+
+          <div id="conversationList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOTIFICATIONS TAB -->
+    <section id="page-notifications" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <h2 class="text-2xl font-bold mb-5">Notifications</h2>
+        <div id="notificationsContainer" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD TAB -->
+    <section id="page-leaderboard" class="app-page hidden">
+      <div class="main-container px-4 py-5">
+        <div class="text-center mb-6">
+          <div class="text-4xl">🏆</div>
+          <h2 class="text-3xl font-black mt-2">Weekly Aura</h2>
+          <p class="text-zinc-500 text-sm">Earn points by posting, sharing stories, and interacting</p>
+        </div>
+        <div id="myRankCard" class="glass border-soft rounded-2xl p-4 mb-5"></div>
+        <div id="leaderboardContainer" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- MY PROFILE TAB -->
+    <section id="page-profile" class="app-page hidden">
+      <div class="main-container">
+        <div class="relative h-44 md:h-56 bg-zinc-800">
+          <img id="profileCoverImg" class="w-full h-full object-cover" src="" alt="Cover">
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80"></div>
+        </div>
+
+        <div class="px-4 pb-12 -mt-16 relative">
+          <div class="flex justify-between items-end">
+            <img id="profileAvatar" class="w-24 h-24 rounded-full object-cover bg-zinc-800 border-4 border-black shadow-xl" src="" alt="Avatar">
+            <button id="editProfileButton" class="px-5 py-2 rounded-full bg-zinc-800 font-semibold hover:bg-zinc-700 transition text-sm">Edit profile</button>
+          </div>
+
+          <div class="flex items-center gap-2 mt-3">
+            <h2 id="profileUsername" class="text-2xl font-black"></h2>
+            <span id="creatorBadgeIndicator" class="hidden px-2 py-0.5 rounded-full bg-purple-600/30 text-purple-300 text-xs font-bold border border-purple-500/40">CREATOR / ADMIN</span>
+          </div>
+          <p id="profileBio" class="text-zinc-300 mt-1 whitespace-pre-wrap text-sm"></p>
+
+          <div class="grid grid-cols-3 gap-2 mt-6">
+            <div class="glass border-soft rounded-2xl p-3 text-center">
+              <div id="profilePosts" class="text-lg font-bold">0</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Posts</div>
+            </div>
+            <button id="myFollowersBtn" class="glass border-soft rounded-2xl p-3 text-center hover:bg-zinc-800/80 transition">
+              <div id="profileFollowers" class="text-lg font-bold">0</div>
+              <div class="text-xs text-zinc-400 mt-0.5">Followers 👥</div>
+            </button>
+            <button id="myFollowingBtn" class="glass border-soft rounded-2xl p-3 text-center hover:bg-zinc-800/80 transition">
+              <div id="profileFollowing" class="text-lg font-bold">0</div>
+              <div class="text-xs text-zinc-400 mt-0.5">Following 👥</div>
+            </button>
+          </div>
+
+          <div class="glass border-soft rounded-2xl p-4 mt-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <div class="text-zinc-500 text-xs">Weekly Aura Points</div>
+                <div id="profileWeeklyPoints" class="text-2xl font-black mt-1">0</div>
+              </div>
+              <div class="text-right">
+                <div class="text-zinc-500 text-xs">Daily Streak</div>
+                <div id="profileStreak" class="text-2xl font-black mt-1">🔥 0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MOMENTS (HIGHLIGHTS) SYSTEM -->
+          <div class="mt-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold flex items-center gap-2">Moments <span class="text-xs font-normal text-zinc-400">(Highlights)</span></h3>
+              <button onclick="openCreateMomentModal()" class="text-xs font-semibold text-purple-400 hover:underline">+ New Moment</button>
+            </div>
+            <div id="myMomentsTray" class="flex items-center gap-3 overflow-x-auto no-scrollbar py-2"></div>
+          </div>
+
+          <div class="mt-6">
+            <h3 class="font-bold mb-3">Badges</h3>
+            <div id="profileBadges" class="grid grid-cols-2 gap-3"></div>
+          </div>
+
+          <div class="mt-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold">Your posts</h3>
+              <span class="text-xs text-zinc-500">Tap to inspect or delete</span>
+            </div>
+            <div id="profilePostsGrid" class="space-y-4"></div>
+          </div>
+
+          <button id="logoutButton" class="w-full mt-10 py-3 rounded-xl bg-red-500/10 text-red-400 font-semibold hover:bg-red-500/20 transition">Logout</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISITED USER PROFILE TAB -->
+    <section id="page-user-profile" class="app-page hidden">
+      <div class="main-container">
+        <div class="sticky top-0 z-40 glass border-b border-white/5 h-14 flex items-center px-4 gap-3">
+          <button id="backFromUserProfile" class="text-2xl px-2">‹</button>
+          <span id="navVisitedUsername" class="font-bold">Profile</span>
+        </div>
+
+        <div class="relative h-44 md:h-56 bg-zinc-800">
+          <img id="visitedUserCover" class="w-full h-full object-cover" src="" alt="Cover">
+          <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80"></div>
+        </div>
+
+        <div class="px-4 pb-12 -mt-16 relative">
+          <div class="flex justify-between items-end">
+            <img id="visitedUserAvatar" class="w-24 h-24 rounded-full object-cover bg-zinc-800 border-4 border-black shadow-xl" src="" alt="Avatar">
+            <div class="flex gap-2">
+              <button id="visitedFollowBtn" class="px-5 py-2 rounded-full gradient-bg font-bold shadow transition text-sm">Follow</button>
+              <button id="visitedMessageBtn" class="px-4 py-2 rounded-full bg-zinc-800 font-semibold hover:bg-zinc-700 transition text-sm">Message</button>
+            </div>
+          </div>
+
+          <h2 id="visitedUsername" class="text-2xl font-black mt-3"></h2>
+          <p id="visitedBio" class="text-zinc-300 mt-1 whitespace-pre-wrap text-sm"></p>
+
+          <div class="grid grid-cols-3 gap-2 mt-6">
+            <div class="glass border-soft rounded-2xl p-3 text-center">
+              <div id="visitedPostsCount" class="text-lg font-bold">0</div>
+              <div class="text-xs text-zinc-500 mt-0.5">Posts</div>
+            </div>
+            <button id="visitedFollowersBtn" class="glass border-soft rounded-2xl p-3 text-center hover:bg-zinc-800/80 transition">
+              <div id="visitedFollowersCount" class="text-lg font-bold">0</div>
+              <div class="text-xs text-zinc-400 mt-0.5">Followers 👥</div>
+            </button>
+            <button id="visitedFollowingBtn" class="glass border-soft rounded-2xl p-3 text-center hover:bg-zinc-800/80 transition">
+              <div id="visitedFollowingCount" class="text-lg font-bold">0</div>
+              <div class="text-xs text-zinc-400 mt-0.5">Following 👥</div>
+            </button>
+          </div>
+
+          <!-- Visited User Moments -->
+          <div class="mt-6">
+            <h3 class="font-bold text-sm mb-3">Moments</h3>
+            <div id="visitedMomentsTray" class="flex items-center gap-3 overflow-x-auto no-scrollbar py-2"></div>
+          </div>
+
+          <div class="mt-8">
+            <h3 class="font-bold mb-4">Posts & Media</h3>
+            <div id="visitedPostsContainer" class="space-y-4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Fullscreen Chat Screen (Supports Human DMs and Aura AI) -->
+  <div id="chatView" class="hidden">
+    <div class="h-16 border-b border-white/10 flex items-center gap-3 px-4 glass z-20 shrink-0">
+      <button id="closeChat" class="text-3xl px-2 leading-none hover:text-purple-400 transition">‹</button>
+      <img id="chatAvatar" class="avatar" src="" alt="Avatar">
+      <div class="flex-1">
+        <div id="chatName" class="font-bold text-sm">Chat</div>
+        <div id="chatStatus" class="text-[11px] text-zinc-400">Offline</div>
+      </div>
+      <button id="clearAiChatBtn" class="hidden text-xs text-zinc-400 hover:text-red-400 px-2 py-1">Clear</button>
+    </div>
+
+    <div id="chatMessages" class="chat-scroll flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+    <div class="chat-bottom-bar shrink-0">
+      <div class="flex gap-2 items-end max-w-3xl mx-auto">
+        <input id="chatFileInput" type="file" class="hidden">
+        <button id="attachFileButton" class="w-11 h-11 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center shrink-0 transition" title="Attach file">📎</button>
+        <textarea id="chatInput" rows="1" placeholder="Type a message..." class="flex-1 max-h-32 min-h-[44px] bg-zinc-900 border border-zinc-800 focus:border-purple-500 rounded-2xl px-4 py-2.5 outline-none resize-none text-sm"></textarea>
+        <button id="sendChatButton" class="w-11 h-11 rounded-full gradient-bg flex items-center justify-center font-bold shrink-0 active:scale-95 transition">↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-nav">
+    <div class="max-w-xl mx-auto grid grid-cols-5">
+      <button data-page="home" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">⌂</span><span class="text-[10px]">Home</span>
+      </button>
+      <button data-page="shorts" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">▶</span><span class="text-[10px]">Shorts</span>
+      </button>
+      <button id="mobileCreateButton" class="flex flex-col items-center justify-center">
+        <span class="w-11 h-11 rounded-2xl gradient-bg flex items-center justify-center text-2xl font-light">+</span>
+      </button>
+      <button data-page="messages" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">💬</span><span class="text-[10px]">Messages</span>
+      </button>
+      <button data-page="profile" class="mobile-nav-btn flex flex-col items-center justify-center gap-1">
+        <span class="text-xl">👤</span><span class="text-[10px]">Profile</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- FULLSCREEN STORY VIEWER MODAL -->
+<div id="storyViewerModal" class="hidden">
+  <div class="absolute top-0 inset-x-0 z-50 p-4 pt-6 bg-gradient-to-b from-black/80 to-transparent">
+    <div id="storyProgressBars" class="flex gap-1.5 mb-3"></div>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img id="storyViewerAvatar" class="w-10 h-10 rounded-full border border-white/30 object-cover" src="">
+        <div>
+          <div id="storyViewerUsername" class="font-bold text-sm text-white">@username</div>
+          <div id="storyViewerTime" class="text-[10px] text-zinc-300">2h ago</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="deleteCurrentStoryBtn" class="hidden text-xs bg-red-600/70 hover:bg-red-600 px-3 py-1 rounded-full text-white font-semibold">Delete</button>
+        <button onclick="closeStoryViewer()" class="text-3xl text-white hover:opacity-75 leading-none">×</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 flex items-center justify-center relative cursor-pointer select-none" onclick="handleStoryTap(event)">
+    <img id="storyViewerImage" class="w-full h-full object-contain hidden" src="">
+    <video id="storyViewerVideo" class="w-full h-full object-contain hidden" playsinline></video>
+    <div id="storyViewerCaption" class="absolute bottom-6 inset-x-4 text-center text-sm font-medium bg-black/50 backdrop-blur-md p-3 rounded-2xl border border-white/10 hidden"></div>
+  </div>
+</div>
+
+<!-- Upload Story Modal -->
+<div id="storyUploadModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-lg">Add 24h Story</h3>
+      <button onclick="$('storyUploadModal').classList.add('hidden')" class="text-2xl text-zinc-400 leading-none">×</button>
+    </div>
+    <div id="storyUploadPreview" class="w-full h-64 bg-zinc-900 rounded-2xl flex items-center justify-center overflow-hidden border border-zinc-800 mb-3">
+      <span class="text-zinc-500 text-sm">Select media to preview</span>
+    </div>
+    <input id="storyFileInput" type="file" accept="image/*,video/*" class="hidden">
+    <button onclick="$('storyFileInput').click()" class="w-full py-2.5 rounded-xl bg-zinc-800 text-sm font-semibold hover:bg-zinc-700 transition mb-3">📷 Choose Photo / Video</button>
+    <input id="storyCaptionInput" placeholder="Add a caption (optional)..." maxlength="150" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none text-sm focus:border-purple-500 mb-4">
+    <button id="publishStoryBtn" class="w-full py-3.5 rounded-xl gradient-bg font-bold active:scale-95 transition">Share Story (24h)</button>
+  </div>
+</div>
+
+<!-- Create Moment Modal -->
+<div id="momentCreateModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-lg">New Moment (Highlight)</h3>
+      <button onclick="$('momentCreateModal').classList.add('hidden')" class="text-2xl text-zinc-400 leading-none">×</button>
+    </div>
+    <input id="momentTitleInput" placeholder="Moment Title (e.g. Travel, Vibe, 2026)" maxlength="30" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none text-sm focus:border-purple-500 mb-3">
+    <div id="momentCoverPreview" class="w-24 h-24 rounded-full bg-zinc-900 border-2 border-dashed border-zinc-700 mx-auto flex items-center justify-center overflow-hidden mb-3">
+      <span class="text-[10px] text-zinc-500 text-center">Cover</span>
+    </div>
+    <input id="momentCoverFileInput" type="file" accept="image/*" class="hidden">
+    <button onclick="$('momentCoverFileInput').click()" class="w-full py-2 rounded-xl bg-zinc-800 text-xs font-semibold hover:bg-zinc-700 mb-4">Select Cover Image</button>
+    <button id="saveMomentBtn" class="w-full py-3.5 rounded-xl gradient-bg font-bold active:scale-95 transition">Create Moment</button>
+  </div>
+</div>
+
+<!-- Comments Drawer Modal -->
+<div id="commentsDrawerModal" class="modal-bg hidden">
+  <div class="modal flex flex-col h-[75dvh] max-h-[75dvh] p-0 overflow-hidden">
+    <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
+      <div>
+        <h3 class="font-bold text-base">Comments</h3>
+        <p id="commentsModalSubtitle" class="text-xs text-zinc-500">Discussion</p>
+      </div>
+      <button id="closeCommentsDrawer" class="text-2xl text-zinc-400 hover:text-white leading-none">×</button>
+    </div>
+
+    <div id="commentsDrawerList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+    <div class="p-3 border-t border-white/10 bg-zinc-950 shrink-0">
+      <div class="flex gap-2 items-center">
+        <input id="drawerCommentInput" maxlength="1000" placeholder="Write a comment..." class="flex-1 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-sm outline-none focus:border-purple-500">
+        <button id="sendDrawerCommentBtn" class="px-4 py-3 rounded-2xl gradient-bg font-bold text-sm shrink-0 active:scale-95 transition">Reply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Post Modal -->
+<div id="postModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-xl font-bold">Create post</h2>
+      <button id="closePostModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <textarea id="postContent" rows="4" maxlength="5000" placeholder="Share something with Aura..." class="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 outline-none resize-none focus:border-purple-500 text-sm"></textarea>
+    <div id="postImagePreview" class="hidden mt-3"></div>
+    <div class="grid grid-cols-2 gap-2 mt-4">
+      <button id="selectPostImage" class="py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-sm font-medium">📷 Add media</button>
+      <button id="toggleShortMode" class="py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-sm font-medium">🎬 Make Short</button>
+    </div>
+    <input id="postImageInput" type="file" accept="image/*,video/*" class="hidden">
+    <button id="publishPostButton" class="w-full mt-4 py-3.5 rounded-xl gradient-bg font-bold">Post</button>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="profileModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-xl font-bold">Edit profile</h2>
+      <button id="closeProfileModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <div class="relative">
+      <img id="editCoverPreview" class="w-full h-32 rounded-2xl object-cover bg-zinc-900 border border-zinc-800" src="" alt="Cover preview">
+      <input id="coverInput" type="file" accept="image/*" class="hidden">
+      <button id="changeCoverButton" class="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-black/80 border border-white/20 text-xs font-semibold hover:bg-black transition">Change cover 🖼️</button>
+    </div>
+    <div class="text-center -mt-10 relative">
+      <img id="editAvatarPreview" class="w-20 h-20 rounded-full mx-auto object-cover bg-zinc-800 border-4 border-black" src="" alt="Profile preview">
+      <input id="avatarInput" type="file" accept="image/*" class="hidden">
+      <button id="changeAvatarButton" class="mt-2 px-3 py-1 rounded-full bg-zinc-800 text-xs font-medium hover:bg-zinc-700 transition">Change photo 📷</button>
+    </div>
+    <div class="mt-5">
+      <label class="text-xs text-zinc-500 font-semibold">Username</label>
+      <input id="editUsername" maxlength="30" class="w-full mt-1.5 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500 text-sm">
+    </div>
+    <div class="mt-4">
+      <label class="text-xs text-zinc-500 font-semibold">Gender</label>
+      <select id="editGender" class="w-full mt-1.5 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-purple-500 text-sm">
+        <option value="">Prefer not to say</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="non_binary">Non-binary</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="mt-4">
+      <label class="text-xs text-zinc-500 font-semibold">Bio</label>
+      <textarea id="editBio" maxlength="160" rows="3" class="w-full mt-1.5 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none resize-none focus:border-purple-500 text-sm"></textarea>
+    </div>
+    <button id="saveProfileButton" class="w-full mt-5 py-3.5 rounded-xl gradient-bg font-bold">Save changes</button>
+  </div>
+</div>
+
+<!-- Post Detail Modal -->
+<div id="postDetailModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-base" id="postDetailTitle">Post</h3>
+      <button id="closePostDetailModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <div id="postDetailContent" class="space-y-3"></div>
+  </div>
+</div>
+
+<!-- Share Post to DM Modal -->
+<div id="sharePostModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-base">Send post to message</h3>
+      <button id="closeSharePostModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <p class="text-xs text-zinc-400 mb-3">Choose a contact to send this post to:</p>
+    <div id="sharePostRecipientList" class="space-y-2 max-h-[50vh] overflow-y-auto"></div>
+  </div>
+</div>
+
+<!-- Follow List Modal -->
+<div id="followListModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-4">
+      <h2 id="followListTitle" class="text-xl font-bold">Members</h2>
+      <button id="closeFollowListModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <div id="followListContainer" class="space-y-3 min-h-[160px] max-h-[60vh] overflow-y-auto"></div>
+  </div>
+</div>
+
+<!-- New Message Modal -->
+<div id="newMessageModal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-xl font-bold">New message</h2>
+      <button id="closeNewMessageModal" class="text-2xl text-zinc-500">×</button>
+    </div>
+    <input id="messageUserSearch" placeholder="Search people..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 outline-none text-sm focus:border-purple-500">
+    <div id="messageUserResults" class="space-y-2 mt-4 max-h-[50vh] overflow-y-auto"></div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal-bg hidden">
+  <div class="modal max-w-sm text-center">
+    <h3 id="confirmTitle" class="text-lg font-bold">Confirm Action</h3>
+    <p id="confirmMessage" class="text-sm text-zinc-400 mt-2">Are you sure you want to proceed?</p>
+    <div class="flex gap-3 mt-6">
+      <button id="confirmCancelBtn" class="flex-1 py-2.5 rounded-xl bg-zinc-800 font-semibold hover:bg-zinc-700">Cancel</button>
+      <button id="confirmOkBtn" class="flex-1 py-2.5 rounded-xl bg-red-600 font-semibold hover:bg-red-700">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+  const SUPABASE_URL = "https://qpsdsfvryrsnygfjqhxm.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_Xw5A2C8ZfxocmkXqJ5UeDQ_Bu_p0pkE";
+  let sb = null;
+
+  const PAGE_SIZE = 12;
+
+  const state = {
+    user: null,
+    profile: null,
+    currentPage: "home",
+    posts: [],
+    shorts: [],
+    stories: [],
+    moments: [],
+    feedPage: 0,
+    feedHasMore: true,
+    feedLoading: false,
+    shortsPage: 0,
+    shortsHasMore: true,
+    shortsLoading: false,
+    currentChat: null,
+    currentChatType: null,
+    currentChatUserId: null,
+    selectedUser: null,
+    postImageFile: null,
+    postIsShort: false,
+    storyFile: null,
+    momentCoverFile: null,
+    conversations: [],
+    notifications: [],
+    realtimeChannels: [],
+    pendingSharePostId: null,
+    followingSet: new Set(),
+    activeCommentPostId: null,
+    likedPostIds: new Set(),
+    aiChatHistory: [],
+    storyViewerUserIndex: 0,
+    storyViewerItemIndex: 0,
+    groupedStories: [],
+    storyTimer: null
+  };
+
+  const $ = id => document.getElementById(id);
+
+  function isCreatorOrAdmin() {
+    return state.profile?.username?.toLowerCase() === "doctorgoon";
+  }
+
+  function escapeHTML(value) {
+    if (value === null || value === undefined) return "";
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function toast(message) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.remove("hidden");
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => {
+      el.classList.add("hidden");
+    }, 2500);
+  }
+
+  function showConfirm(title, message) {
+    return new Promise(resolve => {
+      $("confirmTitle").textContent = title;
+      $("confirmMessage").textContent = message;
+      $("confirmModal").classList.remove("hidden");
+
+      const handleConfirm = () => { cleanup(); resolve(true); };
+      const handleCancel = () => { cleanup(); resolve(false); };
+      const cleanup = () => {
+        $("confirmOkBtn").removeEventListener("click", handleConfirm);
+        $("confirmCancelBtn").removeEventListener("click", handleCancel);
+        $("confirmModal").classList.add("hidden");
+      };
+
+      $("confirmOkBtn").addEventListener("click", handleConfirm);
+      $("confirmCancelBtn").addEventListener("click", handleCancel);
+    });
+  }
+
+  function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    const diff = new Date() - d;
+    if (diff < 60000) return "now";
+    if (diff < 3600000) return Math.floor(diff / 60000) + "m";
+    if (diff < 86400000) return Math.floor(diff / 3600000) + "h";
+    if (diff < 604800000) return Math.floor(diff / 86400000) + "d";
+    return d.toLocaleDateString();
+  }
+
+  function avatarURL(profile) {
+    if (profile?.avatar_url) return profile.avatar_url;
+    const username = profile?.username || profile?.display_name || "Aura";
+    return "https://ui-avatars.com/api/?name=" + encodeURIComponent(username) + "&background=27272a&color=fff&size=128";
+  }
+
+  function computeOnlineStatus(lastSeen) {
+    if (!lastSeen) return { text: "Offline", isOnline: false };
+    const diff = new Date() - new Date(lastSeen);
+    if (diff < 120000) {
+      return { text: "Active now", isOnline: true };
+    }
+    return { text: "Active " + formatDate(lastSeen) + " ago", isOnline: false };
+  }
+
+  async function compressImage(file, maxWidth = 1280, maxHeight = 1280, quality = 0.8) {
+    if (!file || !file.type.startsWith("image/")) return file;
+    if (file.type === "image/gif" || file.type === "image/svg+xml") return file;
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const mime = file.type === "image/png" ? "image/jpeg" : file.type;
+        canvas.toBlob(blob => {
+          if (!blob) { resolve(file); return; }
+          const compressed = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+            type: "image/jpeg",
+            lastModified: Date.now()
+          });
+          resolve(compressed);
+        }, mime, quality);
+      };
+      img.onerror = () => resolve(file);
+    });
+  }
+
+  // --- Video IntersectionObserver to Auto-play/pause videos in viewport ---
+  let videoObserver = null;
+
+  function initVideoObserver() {
+    if (videoObserver) videoObserver.disconnect();
+
+    videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        } else {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.65 });
+
+    document.querySelectorAll("video.short-video, video.post-image").forEach(v => {
+      videoObserver.observe(v);
+    });
+  }
+
+  // --- Click outside modals to dismiss ---
+  document.querySelectorAll(".modal-bg").forEach(modalBg => {
+    modalBg.addEventListener("click", (e) => {
+      if (e.target === modalBg) {
+        modalBg.classList.add("hidden");
+        if (modalBg.id === "commentsDrawerModal") state.activeCommentPostId = null;
+        if (modalBg.id === "sharePostModal") state.pendingSharePostId = null;
+      }
+    });
+  });
+
+  // --- Infinite Scroll Sentinels Observer Setup ---
+  let feedObserver = null;
+  let shortsObserver = null;
+
+  function setupInfiniteScrollObservers() {
+    if (feedObserver) feedObserver.disconnect();
+    feedObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && state.feedHasMore && !state.feedLoading && state.currentPage === "home") {
+        loadFeed(false);
+      }
+    }, { rootMargin: "300px" });
+
+    const feedSentinel = $("feedSentinel");
+    if (feedSentinel) feedObserver.observe(feedSentinel);
+
+    if (shortsObserver) shortsObserver.disconnect();
+    shortsObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && state.shortsHasMore && !state.shortsLoading && state.currentPage === "shorts") {
+        loadShorts(false);
+      }
+    }, { rootMargin: "300px" });
+
+    const shortsSentinel = $("shortsSentinel");
+    if (shortsSentinel) shortsObserver.observe(shortsSentinel);
+  }
+
+  function showPage(page) {
+    state.currentPage = page;
+    document.querySelectorAll(".app-page").forEach(el => el.classList.add("hidden"));
+    const target = $("page-" + page);
+    if (target) target.classList.remove("hidden");
+
+    const titles = {
+      home: "Home", shorts: "Shorts", search: "Search",
+      messages: "Messages", notifications: "Notifications",
+      leaderboard: "Leaderboard", profile: "Profile",
+      "user-profile": "User Profile"
+    };
+
+    $("desktopPageTitle").textContent = titles[page] || "Aura";
+
+    if (page === "home") {
+      loadStories();
+      loadFeed(true);
+    }
+    if (page === "shorts") loadShorts(true);
+    if (page === "notifications") loadNotifications();
+    if (page === "leaderboard") loadLeaderboard();
+    if (page === "profile") loadProfilePage();
+    if (page === "messages") loadConversations();
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.querySelectorAll("[data-page]").forEach(button => {
+    button.addEventListener("click", () => showPage(button.dataset.page));
+  });
+
+  // ==========================================
+  // AUTHENTICATION
+  // ==========================================
+  let authMode = "login";
+
+  $("loginTab").onclick = () => {
+    authMode = "login";
+    $("loginTab").className = "flex-1 py-2.5 rounded-lg bg-zinc-700 font-semibold";
+    $("signupTab").className = "flex-1 py-2.5 rounded-lg text-zinc-400";
+    $("nameField").classList.add("hidden");
+    $("authButton").textContent = "Login";
+  };
+
+  $("signupTab").onclick = () => {
+    authMode = "signup";
+    $("signupTab").className = "flex-1 py-2.5 rounded-lg bg-zinc-700 font-semibold";
+    $("loginTab").className = "flex-1 py-2.5 rounded-lg text-zinc-400";
+    $("nameField").classList.remove("hidden");
+    $("authButton").textContent = "Create account";
+  };
+
+  $("authForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("emailInput").value.trim().toLowerCase();
+    const password = $("passwordInput").value;
+    const rawUsername = $("usernameInput").value.trim().toLowerCase();
+    const username = rawUsername.replace(/[^a-z0-9_]/g, '');
+    const button = $("authButton");
+
+    button.disabled = true;
+    button.textContent = "Please wait...";
+    $("authMessage").textContent = "";
+
+    try {
+      if (authMode === "signup") {
+        if (!username) throw new Error("Please choose a valid alphanumeric username.");
+        const { data, error } = await sb.auth.signUp({
+          email, password,
+          options: { data: { username, display_name: username } }
+        });
+        if (error) throw error;
+
+        if (data?.session) {
+          toast("Welcome to Aura!");
+          await handleSignedIn(data.session.user);
+        } else {
+          const { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+          if (signInErr) throw signInErr;
+          if (signInData?.session) {
+            toast("Welcome to Aura!");
+            await handleSignedIn(signInData.session.user);
+          } else {
+            $("authMessage").textContent = "Account registered! Click Login to start.";
+            $("loginTab").click();
+          }
+        }
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (data?.session) {
+          await handleSignedIn(data.session.user);
+        }
+      }
+    } catch (error) {
+      $("authMessage").textContent = error.message || "Something went wrong.";
+    }
+
+    button.disabled = false;
+    button.textContent = authMode === "login" ? "Login" : "Create account";
+  });
+
+  async function logout() {
+    try {
+      if (sb) await sb.auth.signOut();
+    } catch (err) {
+      console.warn("Sign out err:", err);
+    }
+    state.user = null;
+    state.profile = null;
+    showAuth();
+  }
+
+  $("logoutButton").onclick = logout;
+  $("logoutButtonDesktop").onclick = logout;
+
+  async function loadProfile() {
+    if (!state.user) return;
+    try {
+      const { data, error } = await sb
+        .from("profiles")
+        .select("*")
+        .eq("id", state.user.id)
+        .maybeSingle();
+
+      if (error) console.warn("Profile read error:", error);
+      state.profile = data;
+
+      if (!state.profile) {
+        const username = state.user.user_metadata?.username || state.user.email?.split("@")[0] || ("user_" + state.user.id.slice(0, 5));
+        const { data: created, error: createError } = await sb
+          .from("profiles")
+          .upsert({ id: state.user.id, username, display_name: username }, { onConflict: "id" })
+          .select()
+          .maybeSingle();
+        if (!createError && created) state.profile = created;
+      }
+
+      await loadMyFollowings();
+    } catch (err) {
+      console.warn("Profile fetch fallback:", err);
+      state.profile = {
+        id: state.user.id,
+        username: state.user.user_metadata?.username || state.user.email?.split("@")[0] || "user",
+        display_name: state.user.user_metadata?.display_name || "Aura User"
+      };
+    }
+    updateProfileUI();
+  }
+
+  async function loadMyFollowings() {
+    if (!state.user) return;
+    try {
+      const { data } = await sb.from("follows").select("following_id").eq("follower_id", state.user.id);
+      state.followingSet = new Set((data || []).map(r => r.following_id));
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  function updateProfileUI() {
+    if (!state.profile) return;
+    const avatar = avatarURL(state.profile);
+    const cover = state.profile.cover_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop";
+
+    $("composerAvatar").src = avatar;
+    $("profileAvatar").src = avatar;
+    $("myStoryTrayAvatar").src = avatar;
+    $("profileUsername").textContent = "@" + (state.profile.username || "user");
+    $("profileBio").textContent = state.profile.bio || "Welcome to Aura Social.";
+    $("profileCoverImg").src = cover;
+
+    if (isCreatorOrAdmin()) {
+      $("creatorBadgeIndicator")?.classList.remove("hidden");
+    } else {
+      $("creatorBadgeIndicator")?.classList.add("hidden");
+    }
+
+    $("editAvatarPreview").src = avatar;
+    $("editCoverPreview").src = cover;
+    $("editUsername").value = state.profile.username || "";
+    $("editBio").value = state.profile.bio || "";
+    $("editGender").value = state.profile.gender || "";
+  }
+
+  // ==========================================
+  // STORIES (24-Hour Active Validity)
+  // ==========================================
+  window.openStoryUploader = function() {
+    $("storyFileInput").value = "";
+    $("storyCaptionInput").value = "";
+    $("storyUploadPreview").innerHTML = `<span class="text-zinc-500 text-sm">Select media to preview</span>`;
+    state.storyFile = null;
+    $("storyUploadModal").classList.remove("hidden");
+  };
+
+  $("storyFileInput").onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type.startsWith("image/")) {
+      state.storyFile = await compressImage(file, 1080, 1920, 0.85);
+      const url = URL.createObjectURL(state.storyFile);
+      $("storyUploadPreview").innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
+    } else {
+      state.storyFile = file;
+      const url = URL.createObjectURL(file);
+      $("storyUploadPreview").innerHTML = `<video src="${url}" controls class="w-full h-full object-cover"></video>`;
+    }
+  };
+
+  $("publishStoryBtn").onclick = async () => {
+    if (!state.storyFile) {
+      toast("Please choose a photo or video for your story.");
+      return;
+    }
+
+    const btn = $("publishStoryBtn");
+    btn.disabled = true;
+    btn.textContent = "Uploading Story...";
+
+    try {
+      const ext = state.storyFile.name.split('.').pop() || 'jpg';
+      const path = `${state.user.id}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await sb.storage.from("stories").upload(path, state.storyFile);
+      if (uploadError) throw uploadError;
+
+      const media_url = sb.storage.from("stories").getPublicUrl(path).data.publicUrl;
+      const caption = $("storyCaptionInput").value.trim();
+
+      const { error: insertError } = await sb.from("stories").insert({
+        user_id: state.user.id,
+        media_url,
+        media_type: state.storyFile.type,
+        caption
+      });
+
+      if (insertError) throw insertError;
+
+      $("storyUploadModal").classList.add("hidden");
+      toast("Story shared! Valid for 24 hours ✨");
+      await loadStories();
+    } catch (err) {
+      toast(err.message || "Failed to share story.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Share Story (24h)";
+    }
+  };
+
+  async function loadStories() {
+    const list = $("storiesList");
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    try {
+      const { data, error } = await sb
+        .from("stories")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .gt("created_at", cutoff)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      const groups = new Map();
+      (data || []).forEach(story => {
+        const uid = story.user_id;
+        if (!groups.has(uid)) {
+          groups.set(uid, {
+            user: story.profiles || {},
+            stories: []
+          });
+        }
+        groups.get(uid).stories.push(story);
+      });
+
+      state.groupedStories = Array.from(groups.values());
+
+      if (!state.groupedStories.length) {
+        list.innerHTML = "";
+        return;
+      }
+
+      list.innerHTML = state.groupedStories.map((group, idx) => `
+        <div class="flex flex-col items-center gap-1 shrink-0 cursor-pointer" onclick="openStoryViewer(${idx}, 0)">
+          <div class="w-16 h-16 rounded-full p-0.5 gradient-ring flex items-center justify-center">
+            <img src="${avatarURL(group.user)}" class="w-14 h-14 rounded-full object-cover border-2 border-black">
+          </div>
+          <span class="text-[11px] text-zinc-300 truncate max-w-[64px]">@${escapeHTML(group.user.username || "user")}</span>
+        </div>
+      `).join("");
+    } catch (e) {
+      console.warn("Could not load stories:", e);
+    }
+  }
+
+  window.openStoryViewer = function(userIndex, storyIndex = 0) {
+    if (!state.groupedStories[userIndex]) return;
+    state.storyViewerUserIndex = userIndex;
+    state.storyViewerItemIndex = storyIndex;
+    $("storyViewerModal").classList.remove("hidden");
+    renderCurrentStory();
+  };
+
+  function renderCurrentStory() {
+    clearTimeout(state.storyTimer);
+    const group = state.groupedStories[state.storyViewerUserIndex];
+    if (!group) { closeStoryViewer(); return; }
+
+    const story = group.stories[state.storyViewerItemIndex];
+    if (!story) {
+      if (state.storyViewerUserIndex + 1 < state.groupedStories.length) {
+        openStoryViewer(state.storyViewerUserIndex + 1, 0);
+      } else {
+        closeStoryViewer();
+      }
+      return;
+    }
+
+    const barsContainer = $("storyProgressBars");
+    barsContainer.innerHTML = group.stories.map((_, i) => `
+      <div class="story-progress-bar">
+        <div id="spb-${i}" class="story-progress-fill" style="width: ${i < state.storyViewerItemIndex ? '100%' : '0%'}"></div>
+      </div>
+    `).join("");
+
+    $("storyViewerAvatar").src = avatarURL(group.user);
+    $("storyViewerUsername").textContent = "@" + (group.user.username || "user");
+    $("storyViewerTime").textContent = formatDate(story.created_at);
+
+    const isMine = story.user_id === state.user?.id || isCreatorOrAdmin();
+    const deleteBtn = $("deleteCurrentStoryBtn");
+    if (isMine) {
+      deleteBtn.classList.remove("hidden");
+      deleteBtn.onclick = () => deleteStory(story.id);
+    } else {
+      deleteBtn.classList.add("hidden");
+    }
+
+    const img = $("storyViewerImage");
+    const vid = $("storyViewerVideo");
+    const cap = $("storyViewerCaption");
+
+    if (story.caption) {
+      cap.textContent = story.caption;
+      cap.classList.remove("hidden");
+    } else {
+      cap.classList.add("hidden");
+    }
+
+    if (story.media_type?.startsWith("video")) {
+      img.classList.add("hidden");
+      vid.classList.remove("hidden");
+      vid.src = story.media_url;
+      vid.currentTime = 0;
+      vid.play().catch(() => {});
+      vid.onended = () => advanceStory(1);
+    } else {
+      vid.classList.add("hidden");
+      img.classList.remove("hidden");
+      img.src = story.media_url;
+
+      const currentBar = $(`spb-${state.storyViewerItemIndex}`);
+      if (currentBar) {
+        currentBar.style.transition = "width 5s linear";
+        setTimeout(() => { currentBar.style.width = "100%"; }, 50);
+      }
+      state.storyTimer = setTimeout(() => advanceStory(1), 5000);
+    }
+  }
+
+  window.handleStoryTap = function(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    if (clickX < rect.width * 0.35) {
+      advanceStory(-1);
+    } else {
+      advanceStory(1);
+    }
+  };
+
+  function advanceStory(direction) {
+    clearTimeout(state.storyTimer);
+    const group = state.groupedStories[state.storyViewerUserIndex];
+    if (!group) { closeStoryViewer(); return; }
+
+    const nextIndex = state.storyViewerItemIndex + direction;
+    if (nextIndex >= 0 && nextIndex < group.stories.length) {
+      state.storyViewerItemIndex = nextIndex;
+      renderCurrentStory();
+    } else if (direction > 0) {
+      if (state.storyViewerUserIndex + 1 < state.groupedStories.length) {
+        openStoryViewer(state.storyViewerUserIndex + 1, 0);
+      } else {
+        closeStoryViewer();
+      }
+    } else if (direction < 0) {
+      if (state.storyViewerUserIndex > 0) {
+        const prevGroup = state.groupedStories[state.storyViewerUserIndex - 1];
+        openStoryViewer(state.storyViewerUserIndex - 1, prevGroup.stories.length - 1);
+      } else {
+        renderCurrentStory();
+      }
+    }
+  }
+
+  window.closeStoryViewer = function() {
+    clearTimeout(state.storyTimer);
+    $("storyViewerVideo").pause();
+    $("storyViewerModal").classList.add("hidden");
+  };
+
+  async function deleteStory(storyId) {
+    const ok = await showConfirm("Delete Story", "Are you sure you want to delete this story?");
+    if (!ok) return;
+
+    try {
+      await sb.from("stories").delete().eq("id", storyId);
+      toast("Story deleted.");
+      closeStoryViewer();
+      await loadStories();
+    } catch (err) {
+      toast(err.message || "Failed to delete.");
+    }
+  }
+
+  // ==========================================
+  // MOMENTS (Profile Highlights)
+  // ==========================================
+  window.openCreateMomentModal = function() {
+    $("momentTitleInput").value = "";
+    $("momentCoverFileInput").value = "";
+    state.momentCoverFile = null;
+    $("momentCoverPreview").innerHTML = `<span class="text-[10px] text-zinc-500 text-center">Cover</span>`;
+    $("momentCreateModal").classList.remove("hidden");
+  };
+
+  $("momentCoverFileInput").onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    state.momentCoverFile = await compressImage(file, 400, 400, 0.8);
+    const url = URL.createObjectURL(state.momentCoverFile);
+    $("momentCoverPreview").innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
+  };
+
+  $("saveMomentBtn").onclick = async () => {
+    const title = $("momentTitleInput").value.trim();
+    if (!title) {
+      toast("Please enter a title for your Moment.");
+      return;
+    }
+
+    const btn = $("saveMomentBtn");
+    btn.disabled = true;
+    btn.textContent = "Creating...";
+
+    try {
+      let cover_url = null;
+      if (state.momentCoverFile) {
+        const ext = state.momentCoverFile.name.split('.').pop() || 'jpg';
+        const path = `${state.user.id}/moments/${Date.now()}.${ext}`;
+        const { error: uploadError } = await sb.storage.from("avatars").upload(path, state.momentCoverFile);
+        if (uploadError) throw uploadError;
+        cover_url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      }
+
+      const { error } = await sb.from("moments").insert({
+        user_id: state.user.id,
+        title,
+        cover_url
+      });
+
+      if (error) throw error;
+
+      $("momentCreateModal").classList.add("hidden");
+      toast("Moment highlight created ✨");
+      await loadMoments(state.user.id, "myMomentsTray");
+    } catch (err) {
+      toast(err.message || "Could not create moment.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create Moment";
+    }
+  };
+
+  async function loadMoments(userId, containerId) {
+    const container = $(containerId);
+    if (!container) return;
+
+    try {
+      const { data, error } = await sb
+        .from("moments")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || !data.length) {
+        container.innerHTML = `<div class="text-xs text-zinc-500 py-2">No moments added yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = data.map(m => `
+        <div class="flex flex-col items-center gap-1 shrink-0 cursor-pointer" onclick="viewMoment('${m.id}', '${escapeHTML(m.title)}')">
+          <div class="w-16 h-16 rounded-full p-0.5 border border-zinc-700 hover:border-purple-500 transition flex items-center justify-center bg-zinc-900 overflow-hidden">
+            <img src="${m.cover_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200'}" class="w-full h-full object-cover rounded-full">
+          </div>
+          <span class="text-[11px] text-zinc-300 font-medium truncate max-w-[64px]">${escapeHTML(m.title)}</span>
+        </div>
+      `).join("");
+    } catch (e) {
+      console.warn("Could not load moments:", e);
+    }
+  }
+
+  window.viewMoment = function(momentId, title) {
+    toast(`✨ Viewing Moment: ${title}`);
+  };
+
+  // ==========================================
+  // AURA AI COMPANION (Netlify Function / Groq API)
+  // ==========================================
+  $("openAuraChat").onclick = () => {
+    state.currentChat = "aura-ai";
+    state.currentChatType = "ai";
+    state.currentChatUserId = null;
+
+    $("chatView").classList.remove("hidden");
+    $("chatName").textContent = "Aura AI";
+    $("chatAvatar").src = "https://ui-avatars.com/api/?name=Aura+AI&background=7c3aed&color=fff";
+    $("chatStatus").textContent = "AI Companion · Online";
+    $("chatStatus").className = "text-[11px] text-purple-400 font-semibold";
+    $("clearAiChatBtn").classList.remove("hidden");
+
+    renderAiMessages();
+  };
+
+  $("clearAiChatBtn").onclick = () => {
+    state.aiChatHistory = [];
+    renderAiMessages();
+    toast("Aura AI chat cleared.");
+  };
+
+  function renderAiMessages() {
+    const container = $("chatMessages");
+    if (!state.aiChatHistory.length) {
+      container.innerHTML = `
+        <div class="text-center py-12 px-6">
+          <div class="w-16 h-16 rounded-3xl gradient-bg flex items-center justify-center text-3xl mx-auto shadow-xl">✨</div>
+          <h3 class="font-bold text-lg mt-4">Welcome to Aura AI</h3>
+          <p class="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">Your lightning-fast companion powered by Meta Llama on Groq! Ask anything, brainstorm posts, or chat freely.</p>
+          <div class="flex flex-wrap justify-center gap-2 mt-4">
+            <button onclick="sendQuickAiPrompt('Suggest 3 creative caption ideas for a travel video')" class="px-3 py-1.5 rounded-full bg-zinc-800 text-xs text-purple-300 border border-zinc-700 hover:bg-zinc-700">✈️ Caption ideas</button>
+            <button onclick="sendQuickAiPrompt('How can I boost my weekly Aura points?')" class="px-3 py-1.5 rounded-full bg-zinc-800 text-xs text-purple-300 border border-zinc-700 hover:bg-zinc-700">🏆 Points tips</button>
+            <button onclick="sendQuickAiPrompt('Tell me an inspiring quote for today')" class="px-3 py-1.5 rounded-full bg-zinc-800 text-xs text-purple-300 border border-zinc-700 hover:bg-zinc-700">💡 Daily quote</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = state.aiChatHistory.map(msg => {
+      const isUser = msg.role === "user";
+      return `
+        <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+          <div class="message-bubble rounded-2xl px-4 py-2.5 text-sm ${isUser ? 'message-user text-white' : 'message-bot text-purple-100'}">
+            <div class="whitespace-pre-wrap">${escapeHTML(msg.content)}</div>
+            <div class="text-[10px] opacity-60 mt-1 text-right">${formatDate(msg.time)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+    container.scrollTop = container.scrollHeight;
+  }
+
+  window.sendQuickAiPrompt = function(promptText) {
+    $("chatInput").value = promptText;
+    sendCurrentChatMessage();
+  };
+
+  async function invokeAuraAi(prompt) {
+    state.aiChatHistory.push({ role: "user", content: prompt, time: new Date() });
+    renderAiMessages();
+
+    const typingIndicator = document.createElement("div");
+    typingIndicator.className = "flex justify-start";
+    typingIndicator.innerHTML = `
+      <div class="message-bubble rounded-2xl px-4 py-2 text-xs bg-zinc-800 text-purple-300 flex items-center gap-2">
+        <div class="loader-sm"></div>
+        <span>Aura AI is thinking...</span>
+      </div>
+    `;
+    $("chatMessages").appendChild(typingIndicator);
+    $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+
+    try {
+      const historyPayload = state.aiChatHistory.slice(-10).map(m => ({
+        role: (m.role === "model" || m.role === "assistant") ? "assistant" : "user",
+        content: m.content
+      }));
+
+      // Tries aura-ai first, then falls back to chat endpoint if named differently
+      let res = await fetch("/.netlify/functions/aura-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, history: historyPayload })
+      });
+
+      if (res.status === 404) {
+        res = await fetch("/.netlify/functions/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, history: historyPayload })
+        });
+      }
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.reply || `Function returned status ${res.status}`);
+      }
+
+      typingIndicator.remove();
+
+      let reply = data?.reply || data?.content || data?.message;
+      if (!reply) reply = "I'm thinking... Let's keep chatting!";
+
+      state.aiChatHistory.push({ role: "model", content: reply, time: new Date() });
+      renderAiMessages();
+    } catch (err) {
+      typingIndicator.remove();
+      console.warn("Aura AI Error:", err);
+      let errorText = err.message || "Failed to reach function.";
+      const fallbackReply = errorText.includes("API_KEY")
+        ? `⚠️ ${errorText}`
+        : `Aura AI Notice: ${errorText}`;
+
+      state.aiChatHistory.push({ role: "model", content: fallbackReply, time: new Date() });
+      renderAiMessages();
+    }
+  }
+
+  // ==========================================
+  // PROFILE PAGE & DATA
+  // ==========================================
+  async function loadProfilePage() {
+    await loadProfile();
+    if (!state.profile) return;
+
+    try {
+      const { count: posts } = await sb.from("posts").select("*", { count: "exact", head: true }).eq("user_id", state.user.id);
+      const { count: followers } = await sb.from("follows").select("*", { count: "exact", head: true }).eq("following_id", state.user.id);
+      const { count: following } = await sb.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", state.user.id);
+
+      $("profilePosts").textContent = posts || 0;
+      $("profileFollowers").textContent = followers || 0;
+      $("profileFollowing").textContent = following || 0;
+
+      const { data: weekly } = await sb.from("weekly_leaderboard").select("points").eq("user_id", state.user.id).maybeSingle();
+      $("profileWeeklyPoints").textContent = weekly?.points || 0;
+
+      const { data: streak } = await sb.from("streaks").select("current_streak").eq("user_id", state.user.id).maybeSingle();
+      $("profileStreak").textContent = "🔥 " + (streak?.current_streak || 1);
+
+      const { data: badges } = await sb.from("user_badges").select("*").eq("user_id", state.user.id).order("created_at", { ascending: false });
+      renderBadges(badges || []);
+
+      await loadMoments(state.user.id, "myMomentsTray");
+
+      const { data: userPosts } = await sb.from("posts").select("*").eq("user_id", state.user.id).order("created_at", { ascending: false });
+      renderOwnProfilePosts(userPosts || []);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderBadges(badges) {
+    const container = $("profileBadges");
+    if (!badges.length) {
+      container.innerHTML = `<div class="col-span-2 text-center text-zinc-500 py-4 text-xs">Interact with posts to earn weekly badges 🏆</div>`;
+      return;
+    }
+    container.innerHTML = badges.map(b => `
+      <div class="glass border-soft rounded-2xl p-4 text-center">
+        <div class="text-3xl">${escapeHTML(b.badge_icon || "🏆")}</div>
+        <div class="font-bold mt-2 text-sm">${escapeHTML(b.badge_name || "Badge")}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderOwnProfilePosts(posts) {
+    const container = $("profilePostsGrid");
+    if (!posts.length) {
+      container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm">You haven't posted anything yet.</div>`;
+      return;
+    }
+    container.innerHTML = posts.map(post => `
+      <article class="glass border-soft rounded-2xl overflow-hidden p-4">
+        <div class="flex items-center justify-between mb-3">
+          <button onclick="openPostModalDetail('${post.id}')" class="text-xs text-purple-400 font-semibold hover:underline">Inspect Post 🔍</button>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-zinc-500">${formatDate(post.created_at)}</span>
+            <button onclick="deleteAnyPost('${post.id}')" class="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold transition">🗑️ Delete</button>
+          </div>
+        </div>
+        ${post.content ? `<div class="whitespace-pre-wrap break-words text-sm mb-3 cursor-pointer" onclick="openPostModalDetail('${post.id}')">${escapeHTML(post.content)}</div>` : ""}
+        ${post.media_url ? `<div class="cursor-pointer" onclick="openPostModalDetail('${post.id}')">${renderMedia(post)}</div>` : ""}
+        <div class="mt-3 text-xs text-zinc-500 flex gap-4">
+          <span class="post-likes-cnt-${post.id}">❤️ ${post.likes_count || 0} likes</span>
+          <span class="post-comments-cnt-${post.id}">💬 ${post.comments_count || 0} comments</span>
+          <span class="post-shares-cnt-${post.id}">↗ ${post.shares_count || 0} shares</span>
+        </div>
+      </article>
+    `).join("");
+    initVideoObserver();
+  }
+
+  window.deleteAnyPost = async function(postId) {
+    const confirmed = await showConfirm("Delete Post", "Are you sure you want to delete this post?");
+    if (!confirmed) return;
+
+    try {
+      const { error } = await sb.from("posts").delete().eq("id", postId);
+      if (error) throw error;
+      toast("Post deleted.");
+      if (state.currentPage === "profile") {
+        await loadProfilePage();
+      } else if (state.currentPage === "shorts") {
+        await loadShorts(true);
+      } else {
+        await loadFeed(true);
+      }
+      $("postDetailModal")?.classList.add("hidden");
+    } catch (err) {
+      toast(err.message || "Failed to delete post.");
+    }
+  };
+
+  async function openFollowListModal(userId, type) {
+    const title = type === "followers" ? "Followers" : "Following";
+    $("followListTitle").textContent = title;
+    const container = $("followListContainer");
+    container.innerHTML = `<div class="text-center py-8 text-zinc-500 text-sm">Loading ${type}...</div>`;
+    $("followListModal").classList.remove("hidden");
+
+    try {
+      let query;
+      if (type === "followers") {
+        query = sb.from("follows").select("profiles:follower_id(id, username, bio, avatar_url)").eq("following_id", userId);
+      } else {
+        query = sb.from("follows").select("profiles:following_id(id, username, bio, avatar_url)").eq("follower_id", userId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const users = (data || []).map(row => row.profiles).filter(Boolean);
+
+      if (!users.length) {
+        container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-sm">No users found.</div>`;
+        return;
+      }
+
+      container.innerHTML = users.map(u => {
+        const isFollowing = state.followingSet.has(u.id);
+        const isMe = u.id === state.user.id;
+        return `
+          <div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-zinc-900 transition">
+            <img src="${avatarURL(u)}" class="avatar">
+            <div class="flex-1 min-w-0">
+              <button onclick="closeFollowModalAndOpenProfile('${u.id}')" class="font-bold text-sm hover:underline block truncate">@${escapeHTML(u.username)}</button>
+              <div class="text-xs text-zinc-500 truncate">${escapeHTML(u.bio || "")}</div>
+            </div>
+            ${!isMe ? `
+              <button onclick="toggleFollowUser('${u.id}', this)" class="px-3.5 py-1.5 rounded-full text-xs font-semibold ${isFollowing ? "bg-zinc-800 text-zinc-300" : "gradient-bg text-white"}">
+                ${isFollowing ? "Following" : "Follow"}
+              </button>
+            ` : ""}
+            <button onclick="closeFollowModalAndOpenProfile('${u.id}')" class="px-3 py-1.5 rounded-full bg-zinc-800 text-xs font-semibold hover:bg-zinc-700">View</button>
+          </div>
+        `;
+      }).join("");
+    } catch (e) {
+      container.innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Could not load users.</div>`;
+    }
+  }
+
+  window.closeFollowModalAndOpenProfile = function(userId) {
+    $("followListModal").classList.add("hidden");
+    openUserProfile(userId);
+  };
+
+  window.toggleFollowUser = async function(userId, buttonEl) {
+    const isFollowing = state.followingSet.has(userId);
+    try {
+      if (isFollowing) {
+        await sb.from("follows").delete().eq("follower_id", state.user.id).eq("following_id", userId);
+        state.followingSet.delete(userId);
+        if (buttonEl) {
+          buttonEl.textContent = "Follow";
+          buttonEl.className = "px-3.5 py-1.5 rounded-full text-xs font-semibold gradient-bg text-white";
+        }
+        toast("Unfollowed.");
+      } else {
+        await sb.from("follows").insert({ follower_id: state.user.id, following_id: userId });
+        state.followingSet.add(userId);
+        if (buttonEl) {
+          buttonEl.textContent = "Following";
+          buttonEl.className = "px-3.5 py-1.5 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300";
+        }
+        toast("Following.");
+      }
+      if (state.selectedUser && state.selectedUser.id === userId) {
+        updateVisitedFollowButton();
+      }
+    } catch (err) {
+      toast(err.message || "Failed to update follow.");
+    }
+  };
+
+  $("myFollowersBtn").onclick = () => openFollowListModal(state.user.id, "followers");
+  $("myFollowingBtn").onclick = () => openFollowListModal(state.user.id, "following");
+  $("closeFollowListModal").onclick = () => $("followListModal").classList.add("hidden");
+
+  $("editProfileButton").onclick = () => $("profileModal").classList.remove("hidden");
+  $("closeProfileModal").onclick = () => $("profileModal").classList.add("hidden");
+  $("changeAvatarButton").onclick = () => $("avatarInput").click();
+  $("changeCoverButton").onclick = () => $("coverInput").click();
+
+  $("avatarInput").onchange = e => {
+    const file = e.target.files?.[0];
+    if (file) $("editAvatarPreview").src = URL.createObjectURL(file);
+  };
+
+  $("coverInput").onchange = e => {
+    const file = e.target.files?.[0];
+    if (file) $("editCoverPreview").src = URL.createObjectURL(file);
+  };
+
+  $("saveProfileButton").onclick = async () => {
+    if (!state.user) return;
+    const username = $("editUsername").value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const bio = $("editBio").value.trim();
+    const gender = $("editGender").value;
+
+    if (!username) {
+      toast("Username cannot be empty.");
+      return;
+    }
+
+    const button = $("saveProfileButton");
+    button.disabled = true;
+    button.textContent = "Saving changes...";
+
+    try {
+      let avatar_url = state.profile?.avatar_url || null;
+      let cover_url = state.profile?.cover_url || null;
+
+      let avatarFile = $("avatarInput").files?.[0];
+      if (avatarFile) {
+        avatarFile = await compressImage(avatarFile, 500, 500, 0.82);
+        const ext = avatarFile.name.split(".").pop() || "jpg";
+        const path = `${state.user.id}/avatar-${Date.now()}.${ext}`;
+        const { error: uploadError } = await sb.storage.from("avatars").upload(path, avatarFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        avatar_url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      }
+
+      let coverFile = $("coverInput").files?.[0];
+      if (coverFile) {
+        coverFile = await compressImage(coverFile, 1280, 720, 0.8);
+        const ext = coverFile.name.split(".").pop() || "jpg";
+        const path = `${state.user.id}/cover-${Date.now()}.${ext}`;
+        const { error: uploadError } = await sb.storage.from("avatars").upload(path, coverFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        cover_url = sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      }
+
+      const { data, error } = await sb
+        .from("profiles")
+        .update({ username, bio, gender, avatar_url, cover_url })
+        .eq("id", state.user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      state.profile = data;
+      updateProfileUI();
+      $("profileModal").classList.add("hidden");
+      toast("Profile updated successfully!");
+    } catch (error) {
+      toast(error.message || "Could not update profile.");
+    }
+    button.disabled = false;
+    button.textContent = "Save changes";
+  };
+
+  function openPostComposer(short = false) {
+    state.postIsShort = short;
+    $("postContent").value = "";
+    $("postImagePreview").innerHTML = "";
+    $("postImagePreview").classList.add("hidden");
+    $("toggleShortMode").textContent = short ? "🎬 Short mode ON" : "🎬 Make Short";
+    $("postModal").classList.remove("hidden");
+  }
+
+  $("openPostComposer").onclick = () => openPostComposer(false);
+  $("quickImagePost").onclick = () => { openPostComposer(false); $("postImageInput").click(); };
+  $("quickShortPost").onclick = () => { openPostComposer(true); $("postImageInput").click(); };
+  $("quickFeelingPost").onclick = () => { openPostComposer(false); $("postContent").value = "✨ Feeling good!"; };
+  $("mobileCreateButton").onclick = () => openPostComposer(false);
+  $("createShortButton").onclick = () => { openPostComposer(true); $("postImageInput").click(); };
+  $("closePostModal").onclick = () => $("postModal").classList.add("hidden");
+  $("selectPostImage").onclick = () => $("postImageInput").click();
+
+  $("toggleShortMode").onclick = () => {
+    state.postIsShort = !state.postIsShort;
+    $("toggleShortMode").textContent = state.postIsShort ? "🎬 Short mode ON" : "🎬 Make Short";
+  };
+
+  $("postImageInput").onchange = async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type.startsWith("image/")) {
+      toast("Compressing photo...");
+      state.postImageFile = await compressImage(file, 1280, 1280, 0.8);
+    } else {
+      state.postImageFile = file;
+    }
+
+    const url = URL.createObjectURL(state.postImageFile);
+    $("postImagePreview").classList.remove("hidden");
+    if (state.postImageFile.type.startsWith("video")) {
+      $("postImagePreview").innerHTML = `<video src="${url}" controls class="w-full rounded-2xl max-h-80 object-cover"></video>`;
+    } else {
+      $("postImagePreview").innerHTML = `<img src="${url}" class="w-full rounded-2xl max-h-80 object-cover">`;
+    }
+  };
+
+  $("publishPostButton").onclick = async () => {
+    if (!state.user) return;
+    const content = $("postContent").value.trim();
+    const file = state.postImageFile;
+
+    if (!content && !file) {
+      toast("Write something or add media.");
+      return;
+    }
+
+    const button = $("publishPostButton");
+    button.disabled = true;
+    button.textContent = "Posting...";
+
+    try {
+      let media_url = null;
+      let media_type = null;
+
+      if (file) {
+        const ext = file.name.split(".").pop() || "bin";
+        const path = `${state.user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await sb.storage.from("post-images").upload(path, file);
+        if (uploadError) throw uploadError;
+        media_url = sb.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+        media_type = file.type;
+      }
+
+      const { error } = await sb.from("posts").insert({
+        user_id: state.user.id,
+        content,
+        media_url,
+        media_type,
+        post_type: state.postIsShort ? "short" : "post"
+      });
+
+      if (error) throw error;
+      $("postModal").classList.add("hidden");
+      state.postImageFile = null;
+      $("postImageInput").value = "";
+      toast(state.postIsShort ? "Short posted!" : "Posted!");
+      if (state.postIsShort) await loadShorts(true); else await loadFeed(true);
+    } catch (error) {
+      toast(error.message || "Could not create post.");
+    }
+    button.disabled = false;
+    button.textContent = "Post";
+  };
+
+  // ==========================================
+  // FEED & PAGINATION (Infinite Scroll)
+  // ==========================================
+  async function loadFeed(reset = false) {
+    if (state.feedLoading) return;
+    if (reset) {
+      state.feedPage = 0;
+      state.feedHasMore = true;
+      state.posts = [];
+      $("feedContainer").innerHTML = `
+        <div class="text-center py-16">
+          <div class="loader mx-auto"></div>
+          <p class="text-zinc-500 mt-4">Loading posts...</p>
+        </div>
+      `;
+      $("feedEndMessage").classList.add("hidden");
+    }
+
+    if (!state.feedHasMore) return;
+
+    state.feedLoading = true;
+    $("feedSentinel").classList.remove("hidden");
+
+    try {
+      const from = state.feedPage * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await sb
+        .from("posts")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      const newPosts = data || [];
+      if (newPosts.length < PAGE_SIZE) {
+        state.feedHasMore = false;
+        $("feedEndMessage").classList.remove("hidden");
+      }
+
+      if (reset) {
+        state.posts = newPosts;
+      } else {
+        state.posts = [...state.posts, ...newPosts];
+      }
+
+      state.feedPage += 1;
+      await renderFeed(state.posts, reset);
+    } catch (err) {
+      console.error(err);
+      if (reset) {
+        $("feedContainer").innerHTML = `<div class="text-center text-red-400 py-10">Could not load feed.</div>`;
+      }
+    } finally {
+      state.feedLoading = false;
+      if (!state.feedHasMore) {
+        $("feedSentinel").classList.add("hidden");
+      }
+    }
+  }
+
+  async function renderFeed(posts, isReset = false) {
+    const container = $("feedContainer");
+    if (!posts.length) {
+      container.innerHTML = `<div class="text-center py-20"><div class="text-5xl">✨</div><h3 class="text-xl font-bold mt-4">Your feed is empty</h3><p class="text-zinc-500 mt-1">Be the first to share something.</p></div>`;
+      return;
+    }
+
+    const postIds = posts.map(p => p.id);
+    if (postIds.length && state.user) {
+      try {
+        const { data: likes } = await sb.from("post_likes").select("post_id").eq("user_id", state.user.id).in("post_id", postIds);
+        state.likedPostIds = new Set((likes || []).map(x => x.post_id));
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    const canModerate = isCreatorOrAdmin();
+
+    container.innerHTML = posts.map(post => {
+      const profile = post.profiles || {};
+      const liked = state.likedPostIds.has(post.id);
+      const isShort = post.post_type === "short";
+      const hasDeletePermission = (post.user_id === state.user?.id) || canModerate;
+
+      return `
+        <article class="glass border-soft rounded-2xl overflow-hidden" data-post-id="${post.id}">
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <img src="${avatarURL(profile)}" class="avatar" alt="">
+              <div>
+                <button class="font-bold hover:underline text-sm" onclick="openUserProfile('${post.user_id}')">@${escapeHTML(profile.username || "user")}</button>
+                <div class="text-[11px] text-zinc-500">${formatDate(post.created_at)} ${isShort ? '· <span class="text-purple-400 font-semibold">🎬 Short</span>' : ''}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${hasDeletePermission ? `<button onclick="deleteAnyPost('${post.id}')" class="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold">🗑️ Delete</button>` : ''}
+              ${isShort ? `<button onclick="showPage('shorts')" class="px-2.5 py-1 rounded-full bg-purple-600/20 text-purple-300 text-xs font-semibold hover:bg-purple-600/30">Continuous View ▶</button>` : ''}
+            </div>
+          </div>
+          ${post.content ? `<div class="px-4 pb-3 whitespace-pre-wrap break-words text-sm cursor-pointer" onclick="openPostModalDetail('${post.id}')">${escapeHTML(post.content)}</div>` : ""}
+          ${post.media_url ? `
+            <div class="relative cursor-pointer select-none" onclick="handleDoubleTapLike(event, '${post.id}')">
+              ${renderMedia(post)}
+            </div>
+          ` : ""}
+          <div class="px-4 py-3 flex items-center justify-between text-xs text-zinc-500">
+            <span class="post-likes-cnt-${post.id}">${post.likes_count || 0} likes</span>
+            <span><span class="post-comments-cnt-${post.id}">${post.comments_count || 0}</span> comments · <span class="post-shares-cnt-${post.id}">${post.shares_count || 0}</span> shares</span>
+          </div>
+          <div class="border-t border-white/5 grid grid-cols-4 text-xs font-semibold">
+            <button class="py-3 hover:bg-zinc-900 post-like-btn-${post.id} ${liked ? "text-pink-500 font-bold" : ""}" onclick="toggleLike('${post.id}')">${liked ? "♥" : "♡"} Like</button>
+            <button class="py-3 hover:bg-zinc-900" onclick="openCommentsDrawer('${post.id}')">💬 Comment</button>
+            <button class="py-3 hover:bg-zinc-900" onclick="openSharePostToDMModal('${post.id}')">↗ Share</button>
+            <button class="py-3 hover:bg-zinc-900" onclick="savePost('${post.id}')">🔖 Save</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    initVideoObserver();
+  }
+
+  const doubleTapTrackers = new Map();
+
+  window.handleDoubleTapLike = function(e, postId) {
+    const now = Date.now();
+    const lastTap = doubleTapTrackers.get(postId) || 0;
+
+    if (now - lastTap < 320) {
+      spawnPopHeart(e.currentTarget);
+      if (!state.likedPostIds.has(postId)) {
+        toggleLike(postId);
+      }
+      doubleTapTrackers.delete(postId);
+    } else {
+      doubleTapTrackers.set(postId, now);
+    }
+  };
+
+  function spawnPopHeart(targetElement) {
+    const heart = document.createElement("div");
+    heart.className = "heart-pop";
+    heart.innerHTML = "❤️";
+    targetElement.appendChild(heart);
+    setTimeout(() => heart.remove(), 800);
+  }
+
+  function renderMedia(post) {
+    if (post.media_type?.startsWith("video") || post.post_type === "short") {
+      return `<video src="${escapeHTML(post.media_url)}" controls playsinline preload="metadata" class="post-image bg-black"></video>`;
+    }
+    return `<img src="${escapeHTML(post.media_url)}" class="post-image" loading="lazy" alt="Media">`;
+  }
+
+  // ==========================================
+  // SHORTS & VIDEO OBSERVER
+  // ==========================================
+  async function loadShorts(reset = false) {
+    if (state.shortsLoading) return;
+    const container = $("shortsContainer");
+
+    if (reset) {
+      state.shortsPage = 0;
+      state.shortsHasMore = true;
+      state.shorts = [];
+      container.innerHTML = `
+        <div class="text-center py-16">
+          <div class="loader mx-auto"></div>
+          <p class="text-zinc-500 mt-4">Loading shorts...</p>
+        </div>
+      `;
+      $("shortsEndMessage").classList.add("hidden");
+    }
+
+    if (!state.shortsHasMore) return;
+
+    state.shortsLoading = true;
+    $("shortsSentinel").classList.remove("hidden");
+
+    try {
+      const from = state.shortsPage * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error } = await sb
+        .from("posts")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .eq("post_type", "short")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      const newShorts = data || [];
+      if (newShorts.length < PAGE_SIZE) {
+        state.shortsHasMore = false;
+        $("shortsEndMessage").classList.remove("hidden");
+      }
+
+      if (reset) {
+        state.shorts = newShorts;
+      } else {
+        state.shorts = [...state.shorts, ...newShorts];
+      }
+
+      state.shortsPage += 1;
+      renderShorts(state.shorts);
+    } catch (err) {
+      console.error(err);
+      if (reset) {
+        container.innerHTML = `<div class="text-center py-10 text-red-400">Could not load Shorts.</div>`;
+      }
+    } finally {
+      state.shortsLoading = false;
+      if (!state.shortsHasMore) {
+        $("shortsSentinel").classList.add("hidden");
+      }
+    }
+  }
+
+  function renderShorts(shorts) {
+    const container = $("shortsContainer");
+    if (!shorts.length) {
+      container.innerHTML = `<div class="text-center py-20"><div class="text-5xl">🎬</div><h3 class="text-xl font-bold mt-4">No Shorts yet</h3><p class="text-zinc-500 mt-2 text-sm">Create the first Aura Short.</p></div>`;
+      return;
+    }
+
+    const canModerate = isCreatorOrAdmin();
+
+    container.innerHTML = shorts.map(short => {
+      const profile = short.profiles || {};
+      const liked = state.likedPostIds.has(short.id);
+      const hasDeletePermission = (short.user_id === state.user?.id) || canModerate;
+
+      return `
+        <article class="relative bg-black rounded-2xl overflow-hidden shadow-2xl" data-short-id="${short.id}">
+          <div class="relative cursor-pointer select-none" onclick="handleDoubleTapLike(event, '${short.id}')">
+            ${short.media_url ? `<video src="${escapeHTML(short.media_url)}" class="short-video" controls playsinline loop preload="metadata"></video>` : `<div class="short-video flex items-center justify-center p-8"><p class="text-xl font-bold text-center">${escapeHTML(short.content || "")}</p></div>`}
+          </div>
+
+          <div class="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-20">
+            ${hasDeletePermission ? `
+              <button onclick="deleteAnyPost('${short.id}')" class="w-12 h-12 rounded-full bg-red-600/80 backdrop-blur-md flex items-center justify-center text-sm shadow hover:bg-red-700 active:scale-90 transition" title="Delete Short">
+                🗑️
+              </button>
+            ` : ''}
+
+            <button onclick="toggleLike('${short.id}')" class="flex flex-col items-center group">
+              <div class="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-xl shadow post-like-btn-${short.id} ${liked ? 'text-pink-500 scale-110' : 'text-white'} transition active:scale-90">
+                ♥
+              </div>
+              <span class="text-xs font-bold text-white mt-1 shadow post-likes-cnt-${short.id}">${short.likes_count || 0}</span>
+            </button>
+
+            <button onclick="openCommentsDrawer('${short.id}')" class="flex flex-col items-center">
+              <div class="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-lg text-white shadow active:scale-90 transition">
+                💬
+              </div>
+              <span class="text-xs font-bold text-white mt-1 shadow post-comments-cnt-${short.id}">${short.comments_count || 0}</span>
+            </button>
+
+            <button onclick="openSharePostToDMModal('${short.id}')" class="flex flex-col items-center">
+              <div class="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-lg text-white shadow active:scale-90 transition">
+                ↗
+              </div>
+              <span class="text-[10px] font-medium text-zinc-300 mt-1 post-shares-cnt-${short.id}">${short.shares_count || 0}</span>
+            </button>
+          </div>
+
+          <div class="absolute bottom-4 left-4 right-20 flex items-center gap-3 z-20 pointer-events-none">
+            <img src="${avatarURL(profile)}" class="w-11 h-11 rounded-full object-cover border-2 border-white/40 pointer-events-auto">
+            <div class="pointer-events-auto">
+              <button onclick="openUserProfile('${short.user_id}')" class="font-bold text-white hover:underline block text-sm">@${escapeHTML(profile.username || "user")}</button>
+              <div class="text-xs text-zinc-200 mt-0.5 line-clamp-2">${escapeHTML(short.content || "")}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    initVideoObserver();
+  }
+
+  // ==========================================
+  // COMMENTS DRAWER
+  // ==========================================
+  window.openCommentsDrawer = async function(postId) {
+    state.activeCommentPostId = postId;
+    const modal = $("commentsDrawerModal");
+    const container = $("commentsDrawerList");
+    container.innerHTML = `<div class="text-center py-12"><div class="loader mx-auto"></div><p class="text-zinc-500 text-xs mt-3">Loading comments...</p></div>`;
+    modal.classList.remove("hidden");
+    $("drawerCommentInput").value = "";
+
+    try {
+      const { data: comments, error } = await sb
+        .from("comments")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      renderDrawerComments(comments || []);
+    } catch (e) {
+      container.innerHTML = `<div class="text-center text-red-400 py-10 text-xs">Could not load comments.</div>`;
+    }
+  };
+
+  function renderDrawerComments(comments) {
+    const container = $("commentsDrawerList");
+    $("commentsModalSubtitle").textContent = `${comments.length} comment${comments.length === 1 ? '' : 's'}`;
+
+    if (!comments.length) {
+      container.innerHTML = `<div class="text-center py-16 text-zinc-500 text-sm"><div class="text-3xl mb-2">💬</div>Be the first to share your thoughts.</div>`;
+      return;
+    }
+
+    const canModerate = isCreatorOrAdmin();
+
+    container.innerHTML = comments.map(c => {
+      const canDelete = (c.user_id === state.user?.id) || canModerate;
+      return `
+        <div class="flex gap-3 items-start bg-zinc-900/60 p-3 rounded-2xl border border-white/5">
+          <img src="${avatarURL(c.profiles)}" class="w-8 h-8 rounded-full object-cover shrink-0 cursor-pointer" onclick="closeDrawerAndGoProfile('${c.user_id}')">
+          <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-baseline">
+              <button onclick="closeDrawerAndGoProfile('${c.user_id}')" class="font-bold text-xs hover:underline text-purple-300">@${escapeHTML(c.profiles?.username || "user")}</button>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-zinc-500">${formatDate(c.created_at)}</span>
+                ${canDelete ? `<button onclick="deleteAnyComment('${c.id}')" class="text-[11px] text-red-400 hover:text-red-300 px-1 font-semibold" title="Delete comment">🗑️</button>` : ''}
+              </div>
+            </div>
+            <p class="text-xs text-zinc-200 mt-1 whitespace-pre-wrap break-words">${escapeHTML(c.content)}</p>
+          </div>
+        </div>
+      `;
+    }).join("");
+    container.scrollTop = container.scrollHeight;
+  }
+
+  window.deleteAnyComment = async function(commentId) {
+    const confirmed = await showConfirm("Delete Comment", "Are you sure you want to delete this comment?");
+    if (!confirmed) return;
+
+    try {
+      const { error } = await sb.from("comments").delete().eq("id", commentId);
+      if (error) throw error;
+      toast("Comment deleted.");
+
+      if (state.activeCommentPostId) {
+        const { data: updatedComments } = await sb
+          .from("comments")
+          .select("*, profiles:user_id(id, username, avatar_url)")
+          .eq("post_id", state.activeCommentPostId)
+          .order("created_at", { ascending: true });
+        renderDrawerComments(updatedComments || []);
+      }
+    } catch (e) {
+      toast(e.message || "Failed to delete comment.");
+    }
+  };
+
+  window.closeDrawerAndGoProfile = function(userId) {
+    $("commentsDrawerModal").classList.add("hidden");
+    openUserProfile(userId);
+  };
+
+  $("closeCommentsDrawer").onclick = () => {
+    $("commentsDrawerModal").classList.add("hidden");
+    state.activeCommentPostId = null;
+  };
+
+  $("sendDrawerCommentBtn").onclick = submitDrawerComment;
+  $("drawerCommentInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitDrawerComment();
+    }
+  });
+
+  async function submitDrawerComment() {
+    const input = $("drawerCommentInput");
+    const content = input.value.trim();
+    if (!content || !state.activeCommentPostId) return;
+
+    input.value = "";
+    try {
+      const { error } = await sb.from("comments").insert({
+        post_id: state.activeCommentPostId,
+        user_id: state.user.id,
+        content
+      });
+
+      if (error) throw error;
+      toast("Comment posted!");
+
+      const { data: updatedComments } = await sb
+        .from("comments")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .eq("post_id", state.activeCommentPostId)
+        .order("created_at", { ascending: true });
+
+      renderDrawerComments(updatedComments || []);
+    } catch (e) {
+      toast(e.message || "Failed to post comment.");
+    }
+  }
+
+  function adjustLikeCounter(postId, delta) {
+    document.querySelectorAll(`.post-likes-cnt-${postId}`).forEach(el => {
+      const current = parseInt(el.textContent.replace(/\D/g, ""), 10) || 0;
+      const updated = Math.max(0, current + delta);
+      el.textContent = el.textContent.includes("likes") ? `${updated} likes` : `${updated}`;
+    });
+  }
+
+  function adjustShareCounter(postId, delta = 1) {
+    document.querySelectorAll(`.post-shares-cnt-${postId}`).forEach(el => {
+      const current = parseInt(el.textContent.replace(/\D/g, ""), 10) || 0;
+      const updated = current + delta;
+      if (el.textContent.includes("shares")) {
+        el.textContent = `${updated} shares`;
+      } else {
+        el.textContent = `${updated}`;
+      }
+    });
+  }
+
+  function updateAllShareCounters(postId, exactCount) {
+    document.querySelectorAll(`.post-shares-cnt-${postId}`).forEach(el => {
+      if (el.textContent.includes("shares")) {
+        el.textContent = `${exactCount} shares`;
+      } else {
+        el.textContent = `${exactCount}`;
+      }
+    });
+  }
+
+  window.toggleLike = async function(postId) {
+    if (!state.user) return;
+    const isLiked = state.likedPostIds.has(postId);
+
+    if (isLiked) {
+      state.likedPostIds.delete(postId);
+      updateLikeButtonStyles(postId, false);
+      adjustLikeCounter(postId, -1);
+    } else {
+      state.likedPostIds.add(postId);
+      updateLikeButtonStyles(postId, true);
+      adjustLikeCounter(postId, 1);
+    }
+
+    try {
+      if (isLiked) {
+        await sb.from("post_likes").delete().eq("post_id", postId).eq("user_id", state.user.id);
+      } else {
+        await sb.from("post_likes").insert({ post_id: postId, user_id: state.user.id });
+      }
+    } catch (error) {
+      if (isLiked) {
+        state.likedPostIds.add(postId);
+        updateLikeButtonStyles(postId, true);
+        adjustLikeCounter(postId, 1);
+      } else {
+        state.likedPostIds.delete(postId);
+        updateLikeButtonStyles(postId, false);
+        adjustLikeCounter(postId, -1);
+      }
+      toast(error.message || "Could not update like.");
+    }
+  };
+
+  function updateLikeButtonStyles(postId, liked) {
+    document.querySelectorAll(`.post-like-btn-${postId}`).forEach(btn => {
+      if (btn.classList.contains("gradient-bg") || btn.classList.contains("w-12")) {
+        btn.className = `w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-xl shadow post-like-btn-${postId} ${liked ? 'text-pink-500 scale-110' : 'text-white'} transition active:scale-90`;
+      } else {
+        btn.innerHTML = `${liked ? "♥" : "♡"} Like`;
+        btn.className = `py-3 hover:bg-zinc-900 post-like-btn-${postId} ${liked ? "text-pink-500 font-bold" : ""}`;
+      }
+    });
+  }
+
+  window.openPostModalDetail = async function(postId) {
+    const modal = $("postDetailModal");
+    const container = $("postDetailContent");
+    container.innerHTML = `<div class="text-center py-10"><div class="loader mx-auto"></div></div>`;
+    modal.classList.remove("hidden");
+
+    try {
+      const { data: post, error } = await sb
+        .from("posts")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .eq("id", postId)
+        .single();
+
+      if (error || !post) throw error || new Error("Post not found.");
+
+      const { data: comments } = await sb
+        .from("comments")
+        .select("*, profiles:user_id(id, username, avatar_url)")
+        .eq("post_id", postId)
+        .order("created_at", { ascending: true });
+
+      const profile = post.profiles || {};
+      const canModerate = isCreatorOrAdmin();
+      const hasDeletePermission = (post.user_id === state.user?.id) || canModerate;
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img src="${avatarURL(profile)}" class="avatar">
+            <div>
+              <button class="font-bold text-sm hover:underline" onclick="closePostDetailAndGoProfile('${post.user_id}')">@${escapeHTML(profile.username || "user")}</button>
+              <div class="text-xs text-zinc-500">${formatDate(post.created_at)}</div>
+            </div>
+          </div>
+          ${hasDeletePermission ? `<button onclick="deleteAnyPost('${post.id}')" class="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-semibold">🗑️ Delete</button>` : ''}
+        </div>
+        ${post.content ? `<div class="whitespace-pre-wrap break-words text-sm mt-2">${escapeHTML(post.content)}</div>` : ""}
+        ${post.media_url ? `<div class="mt-2 relative cursor-pointer" onclick="handleDoubleTapLike(event, '${post.id}')">${renderMedia(post)}</div>` : ""}
+        <div class="text-xs text-zinc-500 flex gap-4 my-3">
+          <span class="post-likes-cnt-${post.id}">❤️ ${post.likes_count || 0} likes</span>
+          <span class="post-comments-cnt-${post.id}">💬 ${post.comments_count || 0} comments</span>
+          <span class="post-shares-cnt-${post.id}">↗ ${post.shares_count || 0} shares</span>
+        </div>
+        <div class="border-t border-white/10 pt-3">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold text-xs text-zinc-400">Comments</h4>
+            <button onclick="openCommentsDrawer('${post.id}')" class="text-xs text-purple-400 font-semibold hover:underline">Open Drawer 💬</button>
+          </div>
+          <div class="space-y-2 max-h-48 overflow-y-auto mb-3">
+            ${(comments && comments.length) ? comments.map(c => `
+              <div class="text-xs bg-zinc-900 p-2.5 rounded-xl flex justify-between items-start gap-2">
+                <div>
+                  <strong class="hover:underline cursor-pointer text-purple-300" onclick="closePostDetailAndGoProfile('${c.user_id}')">@${escapeHTML(c.profiles?.username || "user")}</strong>: 
+                  <span class="text-zinc-200">${escapeHTML(c.content)}</span>
+                </div>
+                ${(c.user_id === state.user?.id || canModerate) ? `<button onclick="deleteAnyComment('${c.id}')" class="text-red-400 hover:text-red-300 text-xs">🗑️</button>` : ''}
+              </div>
+            `).join("") : `<div class="text-xs text-zinc-500">No comments yet.</div>`}
+          </div>
+        </div>
+      `;
+      initVideoObserver();
+    } catch (e) {
+      container.innerHTML = `<div class="text-center text-red-400 text-sm py-6">Could not load post details.</div>`;
+    }
+  };
+
+  window.closePostDetailAndGoProfile = function(userId) {
+    $("postDetailModal").classList.add("hidden");
+    openUserProfile(userId);
+  };
+
+  $("closePostDetailModal").onclick = () => $("postDetailModal").classList.add("hidden");
+
+  window.openSharePostToDMModal = async function(postId) {
+    state.pendingSharePostId = postId;
+    const modal = $("sharePostModal");
+    const container = $("sharePostRecipientList");
+    container.innerHTML = `<div class="text-center py-6 text-zinc-500 text-sm">Loading contacts...</div>`;
+    modal.classList.remove("hidden");
+
+    try {
+      const { data: followings } = await sb.from("follows").select("profiles:following_id(id, username, avatar_url)").eq("follower_id", state.user.id);
+      const contacts = (followings || []).map(f => f.profiles).filter(Boolean);
+
+      if (!contacts.length) {
+        container.innerHTML = `<div class="text-center py-6 text-zinc-500 text-sm">Follow people or chat with friends to share posts via DM.</div>`;
+        return;
+      }
+
+      container.innerHTML = contacts.map(c => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl hover:bg-zinc-900 transition">
+          <div class="flex items-center gap-3">
+            <img src="${avatarURL(c)}" class="avatar">
+            <div class="font-bold text-sm">@${escapeHTML(c.username)}</div>
+          </div>
+          <button onclick="sendPostToDM('${c.id}')" class="gradient-bg px-4 py-1.5 rounded-full text-xs font-bold active:scale-95 transition">Send</button>
+        </div>
+      `).join("");
+    } catch (e) {
+      container.innerHTML = `<div class="text-center text-red-400 py-6 text-sm">Could not load contacts.</div>`;
+    }
+  };
+
+  window.sendPostToDM = async function(recipientId) {
+    if (!state.pendingSharePostId) return;
+    const targetPostId = state.pendingSharePostId;
+
+    try {
+      toast("Sending to chat...");
+      const conversationId = await startConversation(recipientId);
+      
+      const { error } = await sb.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: state.user.id,
+        content: "Shared a post with you 📸",
+        shared_post_id: targetPostId
+      });
+
+      if (error) throw error;
+
+      adjustShareCounter(targetPostId, 1);
+      await sb.rpc("register_share", { p_post_id: targetPostId });
+
+      $("sharePostModal").classList.add("hidden");
+      state.pendingSharePostId = null;
+      toast("Post sent via DM!");
+    } catch (err) {
+      toast(err.message || "Failed to share post.");
+    }
+  };
+
+  $("closeSharePostModal").onclick = () => {
+    $("sharePostModal").classList.add("hidden");
+    state.pendingSharePostId = null;
+  };
+
+  window.savePost = function() {
+    toast("Saved to your bookmarks.");
+  };
+
+  // ==========================================
+  // SEARCH & USER PROFILES
+  // ==========================================
+  let searchTimer = null;
+  $("userSearchInput").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => searchUsers($("userSearchInput").value.trim()), 300);
+  });
+
+  async function searchUsers(query) {
+    const container = $("searchResults");
+    if (!query) {
+      container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-sm">Search for people on Aura.</div>`;
+      return;
+    }
+
+    const { data } = await sb
+      .from("profiles")
+      .select("id, username, display_name, bio, avatar_url, last_seen")
+      .ilike("username", `%${query}%`)
+      .neq("id", state.user?.id || '00000000-0000-0000-0000-000000000000')
+      .limit(30);
+
+    if (!data?.length) {
+      container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-sm">No users found.</div>`;
+      return;
+    }
+
+    container.innerHTML = data.map(user => {
+      const isFollowing = state.followingSet.has(user.id);
+      return `
+        <div class="w-full glass border-soft rounded-2xl p-3 flex items-center gap-3 hover:bg-zinc-900 transition">
+          <img src="${avatarURL(user)}" class="avatar cursor-pointer" onclick="openUserProfile('${user.id}')">
+          <div class="flex-1 min-w-0 cursor-pointer" onclick="openUserProfile('${user.id}')">
+            <div class="font-bold text-sm">@${escapeHTML(user.username)}</div>
+            <div class="text-xs text-zinc-500 truncate">${escapeHTML(user.bio || "")}</div>
+          </div>
+          <button onclick="toggleFollowUser('${user.id}', this)" class="px-3.5 py-1.5 rounded-full text-xs font-semibold ${isFollowing ? "bg-zinc-800 text-zinc-300" : "gradient-bg text-white"}">
+            ${isFollowing ? "Following" : "Follow"}
+          </button>
+        </div>
+      `;
+    }).join("");
+  }
+
+  window.openUserProfile = async function(userId) {
+    if (userId === state.user.id) {
+      showPage("profile");
+      return;
+    }
+
+    showPage("user-profile");
+    const container = $("visitedPostsContainer");
+    container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-sm">Loading user profile...</div>`;
+
+    const { data: user, error } = await sb.from("profiles").select("*").eq("id", userId).single();
+    if (error || !user) {
+      toast("Could not load user profile.");
+      showPage("search");
+      return;
+    }
+
+    state.selectedUser = user;
+
+    $("navVisitedUsername").textContent = "@" + user.username;
+    $("visitedUsername").textContent = "@" + user.username;
+    $("visitedBio").textContent = user.bio || "No bio yet.";
+    $("visitedUserAvatar").src = avatarURL(user);
+    $("visitedUserCover").src = user.cover_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop";
+
+    updateVisitedFollowButton();
+
+    const { count: followersCount } = await sb.from("follows").select("*", { count: "exact", head: true }).eq("following_id", userId);
+    const { count: followingCount } = await sb.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", userId);
+    const { count: postsCount } = await sb.from("posts").select("*", { count: "exact", head: true }).eq("user_id", userId);
+
+    $("visitedFollowersCount").textContent = followersCount || 0;
+    $("visitedFollowingCount").textContent = followingCount || 0;
+    $("visitedPostsCount").textContent = postsCount || 0;
+
+    $("visitedFollowersBtn").onclick = () => openFollowListModal(userId, "followers");
+    $("visitedFollowingBtn").onclick = () => openFollowListModal(userId, "following");
+
+    await loadMoments(userId, "visitedMomentsTray");
+
+    const { data: userPosts } = await sb.from("posts").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+
+    if (!userPosts?.length) {
+      container.innerHTML = `<div class="text-center py-12 text-zinc-500 text-sm">No posts yet from @${escapeHTML(user.username)}.</div>`;
+    } else {
+      const canModerate = isCreatorOrAdmin();
+      container.innerHTML = userPosts.map(post => `
+        <article class="glass border-soft rounded-2xl overflow-hidden p-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs text-zinc-500">${formatDate(post.created_at)}</span>
+            <div class="flex items-center gap-2">
+              <button onclick="openPostModalDetail('${post.id}')" class="text-xs text-purple-400 font-semibold hover:underline">Inspect 🔍</button>
+              ${canModerate ? `<button onclick="deleteAnyPost('${post.id}')" class="px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-xs font-semibold">🗑️</button>` : ''}
+            </div>
+          </div>
+          ${post.content ? `<div class="whitespace-pre-wrap break-words text-sm mb-3 cursor-pointer" onclick="openPostModalDetail('${post.id}')">${escapeHTML(post.content)}</div>` : ""}
+          ${post.media_url ? `<div class="cursor-pointer relative" onclick="handleDoubleTapLike(event, '${post.id}')">${renderMedia(post)}</div>` : ""}
+          <div class="mt-3 text-xs text-zinc-500 flex gap-4">
+            <span class="post-likes-cnt-${post.id}">❤️ ${post.likes_count || 0} likes</span>
+            <span class="post-comments-cnt-${post.id}">💬 ${post.comments_count || 0} comments</span>
+            <span class="post-shares-cnt-${post.id}">↗ ${post.shares_count || 0} shares</span>
+          </div>
+        </article>
+      `).join("");
+      initVideoObserver();
+    }
+  };
+
+  function updateVisitedFollowButton() {
+    if (!state.selectedUser) return;
+    const isFollowing = state.followingSet.has(state.selectedUser.id);
+    const btn = $("visitedFollowBtn");
+    if (isFollowing) {
+      btn.textContent = "Following ✓";
+      btn.className = "px-5 py-2 rounded-full bg-zinc-800 text-zinc-300 font-bold shadow hover:bg-zinc-700 transition text-sm";
+    } else {
+      btn.textContent = "Follow";
+      btn.className = "px-5 py-2 rounded-full gradient-bg text-white font-bold shadow transition text-sm";
+    }
+  }
+
+  $("backFromUserProfile").onclick = () => showPage("search");
+
+  $("visitedFollowBtn").onclick = async () => {
+    if (!state.selectedUser) return;
+    await toggleFollowUser(state.selectedUser.id, $("visitedFollowBtn"));
+    const { count: followersCount } = await sb.from("follows").select("*", { count: "exact", head: true }).eq("following_id", state.selectedUser.id);
+    $("visitedFollowersCount").textContent = followersCount || 0;
+  };
+
+  $("visitedMessageBtn").onclick = async () => {
+    if (!state.selectedUser) return;
+    await beginChatWithUser(state.selectedUser.id);
+  };
+
+  // ==========================================
+  // MESSAGES & REALTIME DMS
+  // ==========================================
+  async function loadConversations() {
+    const container = $("conversationList");
+    container.innerHTML = `<div class="text-center py-10 text-zinc-500 text-sm">Loading chats...</div>`;
+
+    const { data: memberships, error } = await sb
+      .from("conversation_members")
+      .select("conversation_id, conversations(id, created_at, is_group, last_message_at)")
+      .eq("user_id", state.user.id);
+
+    if (error) {
+      container.innerHTML = `<div class="text-center py-10 text-red-400 text-sm">Could not load messages.</div>`;
+      return;
+    }
+
+    if (!memberships || !memberships.length) {
+      container.innerHTML = `<div class="text-center py-12 px-5"><div class="text-5xl">💬</div><h3 class="font-bold text-lg mt-3">No conversations yet</h3><p class="text-zinc-500 text-sm mt-1">Search for a friend to start chatting.</p></div>`;
+      return;
+    }
+
+    const rows = [];
+    for (const item of memberships) {
+      const { data: otherMember } = await sb
+        .from("conversation_members")
+        .select("user_id, profiles:user_id(id, username, display_name, avatar_url, last_seen)")
+        .eq("conversation_id", item.conversation_id)
+        .neq("user_id", state.user.id)
+        .maybeSingle();
+
+      if (otherMember?.profiles) {
+        const { data: lastMsg } = await sb
+          .from("messages")
+          .select("content, file_name, shared_post_id, created_at")
+          .eq("conversation_id", item.conversation_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let previewText = "Tap to chat";
+        if (lastMsg?.shared_post_id) previewText = "📸 Shared a post";
+        else if (lastMsg?.file_name) previewText = "📎 " + lastMsg.file_name;
+        else if (lastMsg?.content) previewText = lastMsg.content;
+
+        rows.push({
+          conversationId: item.conversation_id,
+          user: otherMember.profiles,
+          lastMessage: previewText,
+          rawTime: lastMsg?.created_at || item.conversations?.last_message_at || item.conversations?.created_at || 0,
+          time: lastMsg?.created_at ? formatDate(lastMsg.created_at) : ""
+        });
+      }
+    }
+
+    rows.sort((a, b) => new Date(b.rawTime) - new Date(a.rawTime));
+
+    if (!rows.length) {
+      container.innerHTML = `<div class="text-center py-12 px-5"><div class="text-5xl">💬</div><h3 class="font-bold text-lg mt-3">No conversations yet</h3><p class="text-zinc-500 text-sm mt-1">Start chatting with someone.</p></div>`;
+      return;
+    }
+
+    container.innerHTML = rows.map(row => {
+      const presence = computeOnlineStatus(row.user.last_seen);
+      return `
+        <button onclick="openHumanChat('${row.conversationId}','${row.user.id}')" class="w-full px-4 py-3 flex items-center gap-3 hover:bg-zinc-900 border-b border-white/5 transition">
+          <div class="relative">
+            <img src="${avatarURL(row.user)}" class="avatar">
+            <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-black ${presence.isOnline ? "bg-green-500" : "bg-zinc-600"}"></span>
+          </div>
+          <div class="flex-1 text-left min-w-0">
+            <div class="flex justify-between items-baseline">
+              <div class="font-bold text-sm truncate">@${escapeHTML(row.user.username)}</div>
+              <span class="text-[10px] text-zinc-500 shrink-0 ml-2">${row.time}</span>
+            </div>
+            <div class="text-xs text-zinc-400 truncate mt-0.5">${escapeHTML(row.lastMessage)}</div>
+          </div>
+          <span class="text-zinc-500 text-sm">›</span>
+        </button>
+      `;
+    }).join("");
+  }
+
+  async function startConversation(otherUserId) {
+    const { data: conversationId, error } = await sb.rpc("get_or_create_conversation", {
+      p_other_user_id: otherUserId
+    });
+    if (error) throw error;
+    return conversationId;
+  }
+
+  window.openHumanChat = async function(conversationId, userId) {
+    const { data: user } = await sb.from("profiles").select("*").eq("id", userId).maybeSingle();
+    state.currentChat = conversationId;
+    state.currentChatType = "human";
+    state.currentChatUserId = userId;
+
+    $("chatView").classList.remove("hidden");
+    $("chatName").textContent = "@" + (user?.username || "user");
+    $("chatAvatar").src = avatarURL(user);
+    $("clearAiChatBtn").classList.add("hidden");
+
+    const presence = computeOnlineStatus(user?.last_seen);
+    $("chatStatus").textContent = presence.text;
+    $("chatStatus").className = `text-[11px] ${presence.isOnline ? "text-green-400 font-medium" : "text-zinc-500"}`;
+
+    await loadHumanMessages(conversationId);
+  };
+
+  async function loadHumanMessages(conversationId) {
+    const { data, error } = await sb
+      .from("messages")
+      .select("*, posts:shared_post_id(*, profiles:user_id(username))")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
+
+    if (!error) renderMessages(data || []);
+  }
+
+  function renderMessages(messages) {
+    const container = $("chatMessages");
+    container.innerHTML = messages.map(msg => {
+      const mine = msg.sender_id === state.user.id;
+      const sharedPost = msg.posts;
+      return `
+        <div class="flex ${mine ? "justify-end" : "justify-start"}">
+          <div class="message-bubble rounded-2xl px-4 py-2.5 text-sm ${mine ? "message-user text-white" : "message-ai text-zinc-200"}">
+            ${sharedPost ? `
+              <div onclick="openPostModalDetail('${sharedPost.id}')" class="mb-2 p-2 bg-black/40 rounded-xl cursor-pointer hover:opacity-90 border border-white/10">
+                <div class="text-[11px] font-bold text-purple-300 mb-1">📸 Shared Post by @${escapeHTML(sharedPost.profiles?.username || 'user')}</div>
+                ${sharedPost.media_url ? (sharedPost.media_type?.startsWith('video') ? `<video src="${sharedPost.media_url}" class="w-full h-32 object-cover rounded-lg"></video>` : `<img src="${sharedPost.media_url}" class="w-full h-32 object-cover rounded-lg">`) : ''}
+                <div class="text-xs truncate text-zinc-200 mt-1">${escapeHTML(sharedPost.content || 'Tap to view post')}</div>
+              </div>
+            ` : ""}
+            ${msg.file_url ? `<a href="${escapeHTML(msg.file_url)}" target="_blank" rel="noopener" class="block underline mb-1">📎 ${escapeHTML(msg.file_name || "File")}</a>` : ""}
+            ${msg.content ? `<div>${escapeHTML(msg.content)}</div>` : ""}
+            <div class="text-[10px] opacity-60 mt-1 text-right">${formatDate(msg.created_at)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+    container.scrollTop = container.scrollHeight;
+    initVideoObserver();
+  }
+
+  $("closeChat").onclick = () => {
+    $("chatView").classList.add("hidden");
+    state.currentChat = null;
+    state.currentChatType = null;
+    state.currentChatUserId = null;
+    loadConversations();
+  };
+
+  $("newMessageButton").onclick = () => $("newMessageModal").classList.remove("hidden");
+  $("closeNewMessageModal").onclick = () => $("newMessageModal").classList.add("hidden");
+
+  $("messageUserSearch").addEventListener("input", async () => {
+    const query = $("messageUserSearch").value.trim();
+    if (!query) { $("messageUserResults").innerHTML = ""; return; }
+
+    const { data } = await sb.from("profiles").select("id,username,avatar_url,bio").ilike("username", `%${query}%`).neq("id", state.user.id).limit(20);
+    $("messageUserResults").innerHTML = (data || []).map(u => `
+      <button onclick="beginChatWithUser('${u.id}')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-900 transition">
+        <img src="${avatarURL(u)}" class="avatar">
+        <div class="text-left min-w-0 flex-1">
+          <div class="font-bold text-sm">@${escapeHTML(u.username)}</div>
+          <div class="text-xs text-zinc-500 truncate">${escapeHTML(u.bio || "")}</div>
+        </div>
+      </button>
+    `).join("");
+  });
+
+  window.beginChatWithUser = async function(userId) {
+    try {
+      toast("Connecting chat...");
+      const conversationId = await startConversation(userId);
+      $("newMessageModal").classList.add("hidden");
+      await openHumanChat(conversationId, userId);
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "Could not start conversation.");
+    }
+  };
+
+  $("attachFileButton").onclick = () => $("chatFileInput").click();
+
+  $("chatFileInput").onchange = async e => {
+    let file = e.target.files?.[0];
+    if (!file || !state.currentChat || state.currentChatType !== "human") return;
+
+    try {
+      if (file.type.startsWith("image/")) {
+        toast("Compressing image...");
+        file = await compressImage(file, 1280, 1280, 0.82);
+      }
+      toast("Uploading file...");
+
+      const ext = file.name.split(".").pop() || "bin";
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${state.user.id}/${state.currentChat}/${Date.now()}-${cleanFileName}`;
+
+      const { error } = await sb.storage.from("chat-files").upload(path, file);
+      if (error) throw error;
+
+      const { data: signed } = await sb.storage.from("chat-files").createSignedUrl(path, 60 * 60 * 24 * 7);
+      const { error: msgErr } = await sb.from("messages").insert({
+        conversation_id: state.currentChat,
+        sender_id: state.user.id,
+        file_url: signed?.signedUrl || null,
+        file_name: file.name,
+        file_type: file.type,
+        content: ""
+      });
+
+      if (msgErr) throw msgErr;
+      $("chatFileInput").value = "";
+      await loadHumanMessages(state.currentChat);
+    } catch (err) {
+      toast(err.message || "File upload failed.");
+    }
+  };
+
+  $("sendChatButton").onclick = sendCurrentChatMessage;
+  $("chatInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendCurrentChatMessage();
+    }
+  });
+
+  async function sendCurrentChatMessage() {
+    const content = $("chatInput").value.trim();
+    if (!content) return;
+
+    if (!state.currentChat) {
+      toast("Open a conversation first.");
+      return;
+    }
+
+    $("chatInput").value = "";
+
+    if (state.currentChatType === "ai") {
+      await invokeAuraAi(content);
+      return;
+    }
+
+    try {
+      const { error } = await sb.from("messages").insert({
+        conversation_id: state.currentChat,
+        sender_id: state.user.id,
+        content
+      });
+
+      if (error) throw error;
+      await loadHumanMessages(state.currentChat);
+    } catch (error) {
+      console.error(error);
+      toast(error.message || "Message failed.");
+    }
+  }
+
+  // ==========================================
+  // NOTIFICATIONS & LEADERBOARD
+  // ==========================================
+  async function loadNotifications() {
+    const container = $("notificationsContainer");
+    try {
+      const { data, error } = await sb.from("notifications").select("*, actor:actor_id(username, avatar_url)").eq("user_id", state.user.id).order("created_at", { ascending: false }).limit(50);
+      if (error) throw error;
+      state.notifications = data || [];
+
+      if (!data?.length) {
+        container.innerHTML = `<div class="text-center py-16 text-zinc-500"><div class="text-5xl">🔔</div><p class="mt-3 text-sm">No notifications yet.</p></div>`;
+        return;
+      }
+
+      container.innerHTML = data.map(n => `
+        <div class="glass border-soft rounded-2xl p-3 flex gap-3 items-center">
+          <img src="${avatarURL(n.actor)}" class="avatar cursor-pointer" onclick="openUserProfile('${n.actor_id}')">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm"><strong class="cursor-pointer hover:underline" onclick="openUserProfile('${n.actor_id}')">@${escapeHTML(n.actor?.username || "user")}</strong> <span class="text-zinc-400">${escapeHTML(n.message || n.type || "interacted with you")}</span></div>
+            <div class="text-[11px] text-zinc-500 mt-0.5">${formatDate(n.created_at)}</div>
+          </div>
+          ${n.post_id ? `<button onclick="openPostModalDetail('${n.post_id}')" class="px-2.5 py-1 rounded-lg bg-zinc-800 text-xs font-semibold hover:bg-zinc-700">View</button>` : ''}
+        </div>
+      `).join("");
+      $("notificationDot").classList.add("hidden");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function loadLeaderboard() {
+    const container = $("leaderboardContainer");
+    try {
+      const { data, error } = await sb.from("weekly_leaderboard").select("*").order("points", { ascending: false }).limit(100);
+      if (error) throw error;
+
+      if (!data?.length) {
+        container.innerHTML = `<div class="text-center text-zinc-500 py-10 text-sm">Leaderboard starts when people begin interacting.</div>`;
+        return;
+      }
+
+      const myIndex = data.findIndex(r => r.user_id === state.user?.id);
+      $("myRankCard").innerHTML = myIndex >= 0 ? `
+        <div class="flex items-center justify-between">
+          <div><div class="text-xs text-zinc-500">Your weekly rank</div><div class="text-3xl font-black mt-1">#${myIndex + 1}</div></div>
+          <div class="text-right"><div class="text-xs text-zinc-500">Weekly Points</div><div class="text-3xl font-black mt-1">${data[myIndex].points || 0}</div></div>
+        </div>` : `<div class="text-center text-zinc-400 text-sm">Start interacting to appear on the leaderboard.</div>`;
+
+      container.innerHTML = data.map((row, idx) => {
+        const rank = idx + 1;
+        const badge = rank === 1 ? "👑" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank <= 10 ? "⭐" : "🔥";
+        return `
+          <div class="glass border-soft rounded-2xl p-3 flex items-center gap-3 ${row.user_id === state.user?.id ? "border-purple-500/50" : ""}">
+            <div class="w-8 text-center font-black text-sm">${rank}</div>
+            <img src="${avatarURL(row)}" class="avatar cursor-pointer" onclick="openUserProfile('${row.user_id}')">
+            <div class="flex-1 min-w-0 cursor-pointer" onclick="openUserProfile('${row.user_id}')">
+              <div class="font-bold text-sm hover:underline block truncate">@${escapeHTML(row.username || "user")}</div>
+              <div class="text-xs text-zinc-500">${escapeHTML(row.badge_name || "Member")}</div>
+            </div>
+            <div class="text-right"><div class="font-black text-sm">${row.points || 0}</div><div class="text-xs">${badge}</div></div>
+          </div>
+        `;
+      }).join("");
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = `<div class="text-center text-zinc-500 py-10 text-sm">Leaderboard temporarily unavailable.</div>`;
+    }
+  }
+
+  // ==========================================
+  // REALTIME SYNCHRONIZATION
+  // ==========================================
+  async function setupRealtime() {
+    if (!state.user) return;
+
+    for (const ch of state.realtimeChannels) {
+      try {
+        await sb.removeChannel(ch);
+      } catch (err) {
+        console.warn("Channel cleanup error:", err);
+      }
+    }
+    state.realtimeChannels = [];
+
+    const postsChannel = sb.channel("public-posts-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, payload => {
+        if (payload.eventType === "UPDATE" && payload.new) {
+          document.querySelectorAll(`.post-likes-cnt-${payload.new.id}`).forEach(el => {
+            el.textContent = el.textContent.includes("likes") ? `${payload.new.likes_count || 0} likes` : `${payload.new.likes_count || 0}`;
+          });
+          document.querySelectorAll(`.post-comments-cnt-${payload.new.id}`).forEach(el => {
+            el.textContent = `${payload.new.comments_count || 0}`;
+          });
+          if (payload.new.shares_count !== undefined) {
+            updateAllShareCounters(payload.new.id, payload.new.shares_count);
+          }
+        }
+        if (payload.eventType === "INSERT" || payload.eventType === "DELETE") {
+          if (state.currentPage === "home") loadFeed(true);
+          if (state.currentPage === "shorts") loadShorts(true);
+        }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, () => {
+        if (state.currentPage === "home") loadFeed(true);
+        if (state.currentPage === "shorts") loadShorts(true);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, payload => {
+        if (state.activeCommentPostId && payload.new?.post_id === state.activeCommentPostId) {
+          sb.from("comments")
+            .select("*, profiles:user_id(id, username, avatar_url)")
+            .eq("post_id", state.activeCommentPostId)
+            .order("created_at", { ascending: true })
+            .then(({ data }) => { if (data) renderDrawerComments(data); });
+        }
+      })
+      .subscribe();
+
+    const storiesChannel = sb.channel("public-stories-sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "stories" }, () => {
+        if (state.currentPage === "home") loadStories();
+      })
+      .subscribe();
+
+    const notifChannel = sb.channel("user-notifs-" + state.user.id)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${state.user.id}` }, () => {
+        $("notificationDot").classList.remove("hidden");
+        if (state.currentPage === "notifications") loadNotifications();
+      }).subscribe();
+
+    const msgChannel = sb.channel("chat-messages-sync")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, payload => {
+        if (state.currentChat && state.currentChatType === "human" && payload.new.conversation_id === state.currentChat) {
+          loadHumanMessages(state.currentChat);
+        }
+        if (state.currentPage === "messages") {
+          loadConversations();
+        }
+      }).subscribe();
+
+    state.realtimeChannels.push(postsChannel, storiesChannel, notifChannel, msgChannel);
+
+    if (!window.__presenceInterval) {
+      window.__presenceInterval = setInterval(async () => {
+        try {
+          if (state.user) await sb.rpc("touch_presence");
+        } catch {}
+      }, 45000);
+    }
+  }
+
+  // ==========================================
+  // INITIALIZATION
+  // ==========================================
+  async function initializeApp() {
+    const bootTimer = setTimeout(() => {
+      const boot = $("bootScreen");
+      if (boot && !boot.classList.contains("hidden")) {
+        const bypass = $("bootBypassButton");
+        if (bypass) bypass.classList.remove("hidden");
+      }
+    }, 3500);
+
+    try {
+      if (!window.supabase || !window.supabase.createClient) {
+        throw new Error("Supabase library not ready.");
+      }
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      const { data: { session }, error } = await sb.auth.getSession();
+      if (error) console.warn("Session check error:", error);
+
+      if (session?.user) {
+        await handleSignedIn(session.user);
+      } else {
+        showAuth();
+      }
+
+      sb.auth.onAuthStateChange(async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          await handleSignedIn(session.user);
+        }
+        if (event === "SIGNED_OUT") {
+          state.user = null;
+          state.profile = null;
+          showAuth();
+        }
+      });
+    } catch (err) {
+      console.error("Boot failure:", err);
+      showAuth();
+      $("authMessage").textContent = "Connected with offline fallback.";
+    } finally {
+      clearTimeout(bootTimer);
+      $("bootScreen").classList.add("hidden");
+    }
+
+    setupInfiniteScrollObservers();
+  }
+
+  async function handleSignedIn(user) {
+    state.user = user;
+    try {
+      await loadProfile();
+      await sb.rpc("touch_presence");
+    } catch (err) {
+      console.warn("Profile init err:", err);
+    }
+    $("authScreen").classList.add("hidden");
+    $("bootScreen").classList.add("hidden");
+    $("app").classList.remove("hidden");
+    await setupRealtime();
+    showPage("home");
+
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get("post");
+    if (postId) {
+      setTimeout(() => openPostModalDetail(postId), 600);
+    }
+  }
+
+  function showAuth() {
+    $("bootScreen").classList.add("hidden");
+    $("app").classList.add("hidden");
+    $("authScreen").classList.remove("hidden");
+  }
+
+  window.addEventListener("DOMContentLoaded", initializeApp);
+</script>
+
+</body>
+</html>
