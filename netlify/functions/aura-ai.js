@@ -44,7 +44,7 @@ exports.handler = async function (event, context) {
       {
         role: "system",
         content:
-          "You are Aura AI, the official cheerful and witty companion of Aura Social created by Ashutosh Pandey. Keep replies engaging, concise, and helpful. Use emojis!",
+          "You are Aura AI, the official cheerful, helpful, and witty companion of Aura Social created by Ashutosh Pandey. Keep replies engaging, concise, and helpful. Use emojis!",
       },
     ];
 
@@ -65,7 +65,7 @@ exports.handler = async function (event, context) {
       content: prompt || "Hello!",
     });
 
-    // 3. Send request to Groq API instead of DeepSeek
+    // 3. Send request to Groq API using the guaranteed active free-tier model
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -73,7 +73,7 @@ exports.handler = async function (event, context) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         messages,
         temperature: 0.7,
         max_tokens: 800,
